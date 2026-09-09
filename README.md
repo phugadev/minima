@@ -135,20 +135,20 @@ Sources live in `src/`. `registry/minima.css` is generated — do not edit it.
 
 ### The lab
 
-`minima-lab` is a sibling checkout holding the same CSS, the same components
-and the same `cn`, as a page you can look at. Every runner here runs there too,
-byte-identical: `scripts/sources.mjs` is the only file that knows the layout —
-this tree authors under `src/` and ships from `registry/`, the lab keeps the
-same files under `app/` and `components/ui/` — so syncing the two is `cp`.
+Development happens against a private sibling checkout — a Next app holding the
+same CSS, the same components and the same `cn`, as a page you can look at. It
+is not published, and nothing here depends on it; `scripts/sources.mjs` is the
+only file that knows a tree can be laid out either way, so every runner body is
+identical in both and any app that installs the theme can host them.
 
-That matters more than it sounds. The runners used to be edited copies, and
-copies drift toward whoever is looking: eleven had fallen behind, one still
-reading a path that no longer existed, and a focus-ring fix went into the lab's
-`globals.css` instead of into the theme — so the ring stayed broken for every
-consumer while the check that would have caught it was pointed at the one page
-where it could not happen.
-
-`npm run audit:sync` runs in the lab and fails if any copy has moved.
+The arrangement is worth describing even though the other half is private,
+because it is the reason `audit-sync.mjs` exists. The runners used to be edited
+copies, and copies drift toward whoever is looking: eleven had fallen behind,
+one still reading a path that no longer existed, and a focus-ring fix went into
+the lab's `globals.css` instead of into the theme — so the ring stayed broken
+for every consumer while the check that would have caught it was pointed at the
+one page where it could not happen. `audit-sync` compares every shared file and
+fails if one has moved.
 
 Components are forked from shadcn, and `.upstream/` records the exact source
 they were forked from. `audit-upstream` compares structurally, blanking every
