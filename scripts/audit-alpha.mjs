@@ -25,9 +25,10 @@ import {
   luminanceOf,
   contrast,
 } from "./generate-scales.mjs"
+import { readCss } from "./sources.mjs"
 
-const CSS = readFileSync(new URL("../src/ramps.css", import.meta.url), "utf8")
-const DEPTH = readFileSync(new URL("../src/depth.css", import.meta.url), "utf8")
+const CSS = readCss("ramps")
+const DEPTH = readCss("depth")
 const NAMES = ["gray", ...HUES.map((h) => h.name)]
 const TOLERANCE = 1 / 255
 

@@ -17,16 +17,15 @@
  * work nobody has started is a checker people learn to ignore.
  */
 import { readFileSync, readdirSync } from "node:fs"
+import { componentUrl, componentsDir, componentPath, readCss, LAYOUT } from "./sources.mjs"
 
 /* The components we claim to own. Adding a file here is the act of taking
-   responsibility for it — nothing scans itself into this list. */
-const OWNED = [
-  "registry/ui/stat.tsx",
-  "registry/ui/status.tsx",
-  "registry/ui/button.tsx",
-  "registry/ui/tabs.tsx",
-  "registry/ui/input.tsx",
-]
+   responsibility for it — nothing scans itself into this list.
+
+   Bare filenames, not paths: the directory is sources.mjs's business, and the
+   last time this list carried a path prefix it was the wrong one, so the
+   "unclaimed" report matched nothing and named every ported component. */
+const OWNED = ["stat.tsx", "status.tsx", "button.tsx", "tabs.tsx", "input.tsx"]
 
 const TW_PALETTE =
   "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose"
@@ -65,14 +64,14 @@ const RULES = [
 
 const findings = []
 for (const file of OWNED) {
-  const src = readFileSync(new URL(`../${file}`, import.meta.url), "utf8")
+  const src = readFileSync(componentUrl(file), "utf8")
   const lines = src.split("\n")
   for (const rule of RULES) {
     for (const [i, line] of lines.entries()) {
       /* Comments explain the rules; they are not violations of them. */
       const code = line.replace(/\/\/.*$/, "").replace(/\/\*.*?\*\//g, "")
       for (const m of code.matchAll(rule.re)) {
-        findings.push({ file, line: i + 1, rule: rule.name, hit: m[0], why: rule.why })
+        findings.push({ file: componentPath(file), line: i + 1, rule: rule.name, hit: m[0], why: rule.why })
       }
     }
   }
@@ -95,7 +94,7 @@ const RATIO_SPREAD = 1.25
    and still printing PASS. */
 const CONTROL_PX = {}
 {
-  const space = readFileSync(new URL("../src/space.css", import.meta.url), "utf8")
+  const space = readCss("space")
   const root = space.slice(space.indexOf(":root {"), space.indexOf("\n}", space.indexOf(":root {")))
   for (const [, k, v] of root.matchAll(/--control-(\w+):\s*([\d.]+)rem/g)) CONTROL_PX[k] = Number(v) * 16
   if (Object.keys(CONTROL_PX).length < 4)
@@ -103,11 +102,11 @@ const CONTROL_PX = {}
 }
 const RADIUS_PX = {}
 {
-  const minima = readFileSync(new URL("../src/semantic.css", import.meta.url), "utf8")
+  const minima = readCss("semantic")
   for (const [, k, v] of minima.matchAll(/--rung-control-(\w+):\s*([\d.]+)rem/g))
     RADIUS_PX[k] = Number(v) * 16
 }
-const button = readFileSync(new URL("../registry/ui/button.tsx", import.meta.url), "utf8")
+const button = readFileSync(componentUrl("button.tsx"), "utf8")
 const PAD_PX = {}
 for (const [, size, cls] of button.matchAll(/(?:^|\s)"?(default|xs|sm|lg)"?:\s*\n?\s*"([^"]+)"/gm)) {
   const m = cls.match(/\bpx-([\d.]+)/)
@@ -119,7 +118,7 @@ const ratios = (map, label) => {
     .filter(([k]) => map[k] != null)
     .map(([k, h]) => [k, map[k] / h])
   if (vals.length < 3) {
-    findings.push({ file: "registry/ui/button.tsx", line: 0, rule: `${label} coherence`, hit: "unreadable", why: "could not read enough sizes — the check would pass by doing nothing" })
+    findings.push({ file: componentPath("button.tsx"), line: 0, rule: `${label} coherence`, hit: "unreadable", why: "could not read enough sizes — the check would pass by doing nothing" })
     return null
   }
   const nums = vals.map(([, r]) => r)
@@ -146,21 +145,27 @@ console.log("")
    nothing ever matched and every ported component was reported as unported —
    a list that was wrong in the one direction that hides a real gap: a file
    shipped through the registry and scanned by no rule at all. */
-const all = readdirSync(new URL("../registry/ui", import.meta.url))
-  .filter((f) => f.endsWith(".tsx"))
-  .map((f) => `registry/ui/${f}`)
+const all = readdirSync(componentsDir()).filter((f) => f.endsWith(".tsx"))
 const unclaimed = all.filter((f) => !OWNED.includes(f))
 
-console.log(`owned     ${OWNED.length} of ${all.length} component file(s) in registry/ui`)
+console.log(`owned     ${OWNED.length} of ${all.length} component file(s) in ${componentPath("").replace(/\/$/, "")}`)
 if (unclaimed.length) {
-  console.log(`unclaimed ${unclaimed.length}: ${unclaimed.map((f) => f.split("/").pop()).join(", ")}`)
-  findings.push({
-    file: "scripts/audit-components.mjs",
-    line: 0,
-    rule: "unclaimed component",
-    hit: unclaimed.join(", "),
-    why: "shipped through the registry but absent from OWNED, so no rule above has ever looked at it",
-  })
+  /* Severity depends on the tree, and the difference is real rather than
+     convenient. In the registry an unclaimed file SHIPS — it goes out through
+     the registry with no rule above having looked at it, which is a defect. In
+     the lab the same file is a stock shadcn component nobody has ported yet:
+     that is the backlog, and failing on a backlog every single run is how a
+     checker teaches people to stop reading it. */
+  const label = LAYOUT === "registry" ? "unclaimed" : "unported"
+  console.log(`${label} ${unclaimed.length}: ${unclaimed.map((f) => f.replace(".tsx", "")).join(", ")}`)
+  if (LAYOUT === "registry")
+    findings.push({
+      file: "scripts/audit-components.mjs",
+      line: 0,
+      rule: "unclaimed component",
+      hit: unclaimed.map(componentPath).join(", "),
+      why: "shipped through the registry but absent from OWNED, so no rule above has ever looked at it",
+    })
 }
 console.log(`\n${OWNED.length * RULES.length} checks — ${findings.length} literal(s) found`)
 

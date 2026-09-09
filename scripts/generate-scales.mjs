@@ -20,7 +20,7 @@
  * Run: node scripts/generate-scales.mjs
  */
 
-import { writeFileSync } from "node:fs"
+// (no writes here any more — see the throw below)
 
 /* Ten steps, in five pairs: two backgrounds, two element fills, two borders,
    the solid, and two text levels. Reduced from twelve by dropping Radix's
@@ -394,9 +394,24 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   `
 
-  writeFileSync(new URL("../src/ramps.css", import.meta.url), out)
-  console.log(
-    `wrote src/ramps.css — ${HUES.length + 1} ramps × ${STEPS.length} steps`
+  /* This entry point is superseded and it was not harmless.
+
+     `node scripts/generate-scales.mjs` wrote src/ramps.css in an older shape —
+     thirteen ramps of twelve steps under a bare :root, with no role names and
+     no alpha rungs — silently replacing the ten-by-ten file build-ramps.mjs
+     actually emits and that everything downstream reads BY ROLE. Nothing called
+     it, its own header no longer described its output, and it sat one stray
+     command away from replacing the source of the whole system.
+
+     The block above is left standing rather than deleted: it is the reference
+     for what the raw ramp looks like, and cutting it out by hand went wrong
+     twice — the template literal is full of braces, so a brace matcher walks
+     straight past the end of the function. A throw is one line and cannot
+     misfire. */
+  void out
+  throw new Error(
+    "generate-scales.mjs is the maths, not the generator — run scripts/build-ramps.mjs.\n" +
+      "This entry point emitted a superseded ramp shape and would overwrite src/ramps.css with it."
   )
 }
 

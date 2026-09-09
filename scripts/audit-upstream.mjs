@@ -26,6 +26,7 @@
  * FAILURE, not a skip.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs"
+import { componentUrl } from "./sources.mjs"
 
 const SYNC = process.argv.includes("--sync")
 /* The style the components were forked from. A registry repo has no
@@ -204,7 +205,7 @@ console.log(`baseline: style "${manifest.style}", recorded ${manifest.recorded.s
 
 for (const name of FORKED) {
   const baseline = normalise(readFileSync(new URL(`${name}.tsx`, DIR), "utf8"))
-  const ours = normalise(readFileSync(new URL(`../registry/ui/${name}.tsx`, import.meta.url), "utf8"))
+  const ours = normalise(readFileSync(componentUrl(`${name}.tsx`), "utf8"))
 
   const mine = diff(baseline, ours)
   let theirs = null
@@ -217,7 +218,7 @@ for (const name of FORKED) {
   }
 
   const upstreamVariants = variants(readFileSync(new URL(`${name}.tsx`, DIR), "utf8"))
-  const ourVariants = variants(readFileSync(new URL(`../registry/ui/${name}.tsx`, import.meta.url), "utf8"))
+  const ourVariants = variants(readFileSync(componentUrl(`${name}.tsx`), "utf8"))
   const dropped = [...upstreamVariants].filter(
     (v) => !ourVariants.has(v) && !(INTENTIONALLY_DROPPED[name] ?? []).includes(v)
   )

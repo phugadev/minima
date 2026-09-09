@@ -17,8 +17,9 @@
  *   node scripts/audit-motion.mjs
  */
 import { readFileSync } from "node:fs"
+import { readCss } from "./sources.mjs"
 
-const CSS = readFileSync(new URL("../src/motion.css", import.meta.url), "utf8")
+const CSS = readCss("motion")
 
 /* Past roughly this, a transition stops reading as motion and starts reading
    as latency — the interface hesitating rather than responding. */

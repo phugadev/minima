@@ -25,8 +25,9 @@
  *   node scripts/audit-cascade.mjs
  */
 import { readFileSync } from "node:fs"
+import { bundle } from "./sources.mjs"
 
-const RAW = readFileSync(new URL("../registry/minima.css", import.meta.url), "utf8")
+const RAW = bundle()
 
 const failures = []
 const fail = (rule, detail) => failures.push({ rule, detail })

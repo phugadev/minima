@@ -18,23 +18,17 @@
  *
  *   node scripts/build-theme.mjs
  */
-import { readFileSync, writeFileSync } from "node:fs"
+import { writeFileSync } from "node:fs"
+import { readCss, ORDER, LAYOUT } from "./sources.mjs"
 
-const ORDER = [
-  "ramps",     // generated OKLCH scales — the values
-  "semantic",  // shadcn's eighteen names, pointed at those values
-  "tailwind",  // Tailwind's own scales, re-pointed
-  "type",
-  "space",
-  "depth",
-  "motion",
-  "state",
-  "native",
-  "prose",
-  "syntax",
-]
+/* ORDER lives in sources.mjs because the lab imports the same files in the same
+   sequence, and a second copy of it here is a second thing to keep right. */
+if (LAYOUT !== "registry") {
+  console.error("build-theme only runs where there is a registry/ to write into")
+  process.exit(1)
+}
 
-const src = (name) => readFileSync(new URL(`../src/${name}.css`, import.meta.url), "utf8")
+const src = (name) => readCss(name)
 
 /* The semantic layer redefines shadcn's own eighteen names, so it has to beat
    shadcn's :root — and it cannot do that on source order, because CSS requires

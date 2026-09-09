@@ -21,8 +21,9 @@
  */
 import { readFileSync, writeFileSync } from "node:fs"
 import { srgb } from "./generate-scales.mjs"
+import { readCss, syntaxThemeUrl } from "./sources.mjs"
 
-const read = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")
+const read = (f) => readCss(f.replace(/\.css$/, ""))
 const FILES = ["ramps.css", "semantic.css", "depth.css", "syntax.css"]
 
 const declarations = (css, selector) => {
@@ -134,7 +135,7 @@ for (const mode of ["light", "dark"]) {
       },
     })),
   }
-  writeFileSync(new URL(`../registry/syntax-${mode}.json`, import.meta.url), JSON.stringify(theme, null, 2) + "\n")
+  writeFileSync(syntaxThemeUrl(mode), JSON.stringify(theme, null, 2) + "\n")
   console.log(
     `wrote registry/syntax-${mode}.json — ${theme.tokenColors.length} roles, ` +
       `${theme.tokenColors.reduce((n, t) => n + t.scope.length, 0)} scopes, ground ${theme.colors["editor.background"]}`

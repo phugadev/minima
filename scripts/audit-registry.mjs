@@ -16,8 +16,14 @@
  *   node scripts/audit-registry.mjs
  */
 import { readFileSync, statSync, lstatSync, existsSync } from "node:fs"
+import { LAYOUT, registryJsonUrl } from "./sources.mjs"
 
-const registry = JSON.parse(readFileSync(new URL("../registry.json", import.meta.url), "utf8"))
+const registryUrl = registryJsonUrl()
+if (!registryUrl) {
+  console.error(`no registry.json in the ${LAYOUT} layout — nothing to check, and a silent pass here would be a lie`)
+  process.exit(1)
+}
+const registry = JSON.parse(readFileSync(registryUrl, "utf8"))
 
 /* From https://ui.shadcn.com/schema/registry-item.json */
 const ITEM_TYPES = [

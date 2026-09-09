@@ -12,6 +12,7 @@
  * a P3 display and gamut-map down elsewhere.
  */
 import { writeFileSync } from "node:fs"
+import { cssUrl, LAYOUT } from "./sources.mjs"
 import {
   rampVars,
   alphaVars,
@@ -110,6 +111,10 @@ ${block("dark", ':root[data-theme="minima"].dark')}
 ${theme()}
 `
 
-writeFileSync(new URL("../src/ramps.css", import.meta.url), css)
+/* Through sources.mjs, or this writes src/ramps.css into the lab — which does
+   not just put the file in the wrong place, it makes the lab LOOK like the
+   registry to layout detection, and every runner there starts auditing a tree
+   that does not exist. */
+writeFileSync(cssUrl("ramps"), css)
 const n = Object.keys(rampVars("light")).length + Object.keys(alphaVars("light")).length + 1
-console.log(`wrote src/ramps.css — ${HUES.length + 1} ramps x ${STEPS.length} steps, ${n} vars per mode`)
+console.log(`wrote ${LAYOUT === "registry" ? "src" : "app"}/ramps.css — ${HUES.length + 1} ramps x ${STEPS.length} steps, ${n} vars per mode`)

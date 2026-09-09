@@ -20,8 +20,9 @@
  */
 import { readFileSync } from "node:fs"
 import { srgb, composite, relLuminance, contrast } from "./generate-scales.mjs"
+import { readCss } from "./sources.mjs"
 
-const read = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")
+const read = (f) => readCss(f.replace(/\.css$/, ""))
 const SELECTOR = {
   light: ':root[data-theme="minima"] {',
   dark: ':root[data-theme="minima"].dark {',

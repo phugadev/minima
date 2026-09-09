@@ -26,10 +26,15 @@
  *
  *   node scripts/audit-merge.mjs
  */
-import { readFileSync } from "node:fs"
-import { cn } from "../registry/lib/cn.ts"
+import { readCss, libUrl } from "./sources.mjs"
 
-const read = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")
+/* Dynamic, because the shipped cn lives at registry/lib in this tree and at
+   lib/ in the lab, and a static import cannot be resolved at run time. It is
+   still the SHIPPED file either way — testing a copy of the config would test
+   nothing. Node imports the .ts directly. */
+const { cn } = await import(libUrl().href)
+
+const read = (f) => readCss(f.replace(/\.css$/, ""))
 const CSS = ["type.css", "space.css", "depth.css", "motion.css", "ramps.css", "syntax.css", "tailwind.css"]
   .map(read)
   .join("\n")

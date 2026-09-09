@@ -15,8 +15,9 @@
  */
 import { readFileSync } from "node:fs"
 import { srgb, composite, luminanceOf, contrast } from "./generate-scales.mjs"
+import { readCss } from "./sources.mjs"
 
-const read = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")
+const read = (f) => readCss(f.replace(/\.css$/, ""))
 const NATIVE = read("native.css")
 const SPACE = read("space.css")
 const FILES = ["ramps.css", "semantic.css", "depth.css", "state.css", "native.css"]

@@ -23,6 +23,7 @@
  *   APP=/path/to/an/install node scripts/build-coverage.mjs
  */
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs"
+import { bundle } from "./sources.mjs"
 
 const APP = process.env.APP
 if (!APP) {
@@ -30,10 +31,7 @@ if (!APP) {
   process.exit(1)
 }
 
-const css = readFileSync(new URL("../registry/minima.css", import.meta.url), "utf8").replace(
-  /\/\*[\s\S]*?\*\//g,
-  ""
-)
+const css = bundle().replace(/\/\*[\s\S]*?\*\//g, "")
 
 /* Every @theme declaration, in source order. */
 const themeBody = [...css.matchAll(/@theme[^{]*\{([\s\S]*?)\n\}/g)].map((m) => m[1]).join("\n")
