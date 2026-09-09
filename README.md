@@ -6,8 +6,10 @@ else.
 
 It ships as **one CSS file**. Add it to an existing shadcn project and the
 components you already have pick it up without being edited, because Minima
-re-points Tailwind's own radius, shadow, easing and colour scales at its rungs
-rather than inventing a parallel set of names.
+re-points Tailwind's own shadow, easing and colour scales at its rungs rather
+than inventing a parallel set of names. (Radius is the one scale shadcn keeps —
+see [docs/install.md](docs/install.md) for why, and the one-time edit that
+hands it over.)
 
 ## Install
 

@@ -1072,9 +1072,22 @@
   --rung-control-md: 0.625rem;
   --rung-control-lg: 0.75rem;
 
-  /* Kept only so anything still reading --radius directly stays sane. Nothing
-     in the four rungs above derives from it any more. */
-  --radius: 0.75rem;
+  /* --radius is shadcn's anchor, and in a real install it is the one scale
+     Minima cannot take over. CSS requires @import at the top of a file, so
+     Minima's `@theme` is always followed by the `@theme` that `shadcn init`
+     wrote — and that one re-derives --radius-sm..4xl from --radius with fixed
+     ratios. Later wins, and there is no import position that changes it.
+
+     Overriding the generated .rounded-* utilities instead was tried and is
+     worse: it also beats the consumer's own `rounded-none`, which is a bigger
+     failure than the one it fixes.
+
+     So Minima anchors the chain instead of fighting it. Pointing --radius at
+     the control rung makes shadcn's 0.6x and 1x steps land exactly on the mark
+     and control rungs — which is what its own components use — and leaves the
+     rest close. A consumer who wants every rung exact deletes seven lines from
+     their @theme block; that is documented, not required. */
+  --radius: var(--rung-control);
 }
 
 /* Dark is not an inversion. The semantic layer above is written once; only

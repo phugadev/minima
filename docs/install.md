@@ -64,11 +64,31 @@ Reload and the app should already look different, **without a single component
 being edited.** Minima re-points Tailwind's own scales rather than adding a
 parallel set of names, so:
 
-- a card asking for `rounded-xl` gets the panel radius
 - `shadow-sm` gets the raised shadow — a real two-layer cast shadow
 - `ease-out` gets Minima's curve
 - `bg-card`, `border-border`, `text-muted-foreground` and the rest of shadcn's
   eighteen names resolve to the ramps
+
+### The one exception: radius
+
+`shadcn init` writes its own `@theme` block that re-derives `--radius-sm`
+through `--radius-4xl` from a single `--radius` with fixed ratios — and CSS
+requires every `@import` at the top of a file, so Minima's `@theme` is *always*
+followed by shadcn's. Later wins, and no import position changes that.
+
+Rather than fight it, Minima anchors it: `--radius` points at the control rung,
+which puts shadcn's `0.6x` and `1x` steps exactly on the mark and control
+rungs — the two its own components actually use.
+
+```
+rounded-sm    6px   = mark rung      (checkboxes)
+rounded-lg   10px   = control rung   (buttons, inputs)
+rounded-xl   14px                    (Minima's panel rung is 12px)
+```
+
+If you want every rung exact, delete the seven `--radius-*` lines from the
+`@theme inline` block in your `globals.css`. Minima defines them, and with
+shadcn's gone its own take effect. That is optional, not required.
 
 Three things you get that are not cosmetic:
 
