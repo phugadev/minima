@@ -1,133 +1,153 @@
 /**
  * Class-merge audit.
  *
- * Every shadcn component composes classes through `cn()`, and `cn` — like
- * tailwind-merge, which the rest of the ecosystem uses — carries a HARDCODED
- * table of which utility belongs to which group. A custom utility it has never
- * heard of gets guessed at, and a wrong guess means the class is silently
- * dropped when it meets one from the group it was mistaken for.
+ * Every component composes classes through `cn()`, and every merger carries a
+ * HARDCODED table of which utility belongs to which CSS property. A custom
+ * utility it has not heard of is guessed at, and there are two ways to guess
+ * wrong. Both are silent, and this project shipped both.
  *
- * That is not hypothetical. The type scale originally shipped as text-display,
- * text-body and so on, using Tailwind's --text-* namespace. `cn` does not
- * recognise those as font sizes, so it filed them under text-COLOUR:
+ *   DROPPED — filed under the wrong property, then displaced by a class from
+ *   that group. `text-body` was read as a colour and eaten by
+ *   `text-muted-foreground`; the paragraph just rendered at the wrong size.
  *
- *   cn("text-body font-medium text-muted-foreground")
- *     -> "font-medium text-muted-foreground"
+ *   NOT DISPLACING — given its own private group, so it never collapses with
+ *   the stock class it replaces and BOTH survive. The cascade then decides by
+ *   stylesheet order rather than by what the author wrote. `rounded-lg
+ *   rounded-control-xs` rendered at 10px instead of 8px, and
+ *   `<Button className="h-control-lg" />` silently did nothing, because the
+ *   override happened to sort earlier.
  *
- * No error. The paragraph just renders at the wrong size. All eleven sizes
- * broke this way and nothing in the project could see it, because every runner
- * we had reads CSS and this happens in JavaScript at render time.
+ * The second is why registry/lib/cn.ts exists: it cannot be fixed by naming,
+ * since the point is that a Minima utility must share a group with the stock
+ * utility it replaces. This file tests the SHIPPED cn, not a copy of its
+ * config, and separately checks that every utility the CSS defines is actually
+ * registered in it — a theme token added without a merger entry is the exact
+ * shape of both bugs above.
  *
  *   node scripts/audit-merge.mjs
- *
- * The partner column is the point: a utility is only eaten when it meets a
- * class from the group it was misfiled into, so each one is tested against a
- * stock utility sharing its prefix.
  */
 import { readFileSync } from "node:fs"
-import { cn } from "cn"
+import { cn } from "../registry/lib/cn.ts"
 
 const read = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8")
 const CSS = ["type.css", "space.css", "depth.css", "motion.css", "ramps.css", "syntax.css", "tailwind.css"]
   .map(read)
   .join("\n")
 
-/* The invariant is narrow and worth stating exactly, because the first version
-   of this file got it wrong: a utility being displaced by another class from
-   the SAME group is correct — that is what a merger is for, and bg-black
-   should absolutely beat bg-gray-reading. The bug is a utility being displaced
-   by a class governing a DIFFERENT property, which only happens when cn has
-   misfiled it.
-   
-   So every partner below changes something ours does not. */
+const uniq = (a) => [...new Set(a)]
+
+/* Discovered from the CSS, never listed here — a list kept in two places is a
+   list that disagrees with itself.
+   `partner` is a STOCK utility governing the same property. `foreign` governs
+   a different one. Ours must collapse with the first and coexist with the
+   second. */
 const GROUPS = [
   {
     what: "type scale",
-    names: [...CSS.matchAll(/@utility (type-[\w-]+)/g)].map((m) => m[1]),
-    /* The exact pairing that was broken: a size meeting a colour. */
-    partners: ["text-muted-foreground", "text-black"],
+    names: uniq([...CSS.matchAll(/@utility (type-[\w-]+)/g)].map((m) => m[1])),
+    partner: "text-sm",
+    foreign: "text-muted-foreground",
   },
   {
     what: "duration",
-    names: [...CSS.matchAll(/@utility (duration-[\w-]+)/g)].map((m) => m[1]),
-    partners: ["delay-100", "ease-linear"],
+    names: uniq([...CSS.matchAll(/@utility (duration-[\w-]+)/g)].map((m) => m[1])),
+    partner: "duration-150",
+    foreign: "delay-100",
   },
   {
     what: "radius",
-    names: [...new Set([...CSS.matchAll(/--radius-([\w-]+):/g)].map((m) => `rounded-${m[1]}`))],
-    partners: ["border", "shadow-none"],
+    names: uniq([...CSS.matchAll(/--radius-([\w-]+):/g)].map((m) => `rounded-${m[1]}`)).filter(
+      (n) => !/^rounded-(sm|md|lg|xl|2xl|3xl|4xl|none|full)$/.test(n)
+    ),
+    partner: "rounded-none",
+    foreign: "border",
   },
   {
-    what: "shadow",
-    names: [...new Set([...CSS.matchAll(/--shadow-([\w-]+):/g)].map((m) => `shadow-${m[1]}`))],
-    partners: ["border", "rounded-none"],
+    what: "depth",
+    names: uniq([...CSS.matchAll(/--shadow-([\w-]+):/g)].map((m) => `shadow-${m[1]}`)).filter(
+      (n) => !/^shadow-(2xs|xs|sm|md|lg|xl|2xl|none)$/.test(n)
+    ),
+    partner: "shadow-none",
+    foreign: "border",
   },
   {
     what: "control size",
-    names: [...CSS.matchAll(/--spacing-(control-[\w-]+):/g)].flatMap((m) => [`h-${m[1]}`, `size-${m[1]}`]),
-    partners: ["p-2", "border"],
+    names: uniq([...CSS.matchAll(/--spacing-(control-[\w-]+):/g)].map((m) => `h-${m[1]}`)),
+    partner: "h-8",
+    foreign: "border",
+  },
+  {
+    what: "control square",
+    names: uniq([...CSS.matchAll(/--spacing-(control-[\w-]+):/g)].map((m) => `size-${m[1]}`)),
+    partner: "size-8",
+    foreign: "border",
   },
   {
     what: "spacing",
-    names: [...CSS.matchAll(/--spacing-(inset|gutter|stack|section):/g)].flatMap((m) => [
-      `p-${m[1]}`,
-      `gap-${m[1]}`,
-      `mt-${m[1]}`,
-    ]),
-    partners: ["border", "text-black"],
+    names: uniq([...CSS.matchAll(/--spacing-(inset|gutter|stack|section):/g)].map((m) => `p-${m[1]}`)),
+    partner: "p-2",
+    foreign: "border",
   },
   {
-    what: "colour",
-    names: ["gray-reading", "gray-tint", "red-text", "surface-raised", "control-track"].flatMap((n) => [
-      `bg-${n}`,
-      `text-${n}`,
-    ]),
-    /* A background paired with a text colour and vice versa — different
-       properties, so both must survive. */
-    partners: ["underline", "border"],
+    what: "gap",
+    names: uniq([...CSS.matchAll(/--spacing-(inset|gutter|stack|section):/g)].map((m) => `gap-${m[1]}`)),
+    partner: "gap-2",
+    foreign: "border",
   },
 ]
 
 const failures = []
 let checked = 0
 
-/* Canary. Everything below reports "all survive", and that sentence is only
-   worth reading if this file can still SEE a dropped class. An unknown text-*
-   is exactly what the type scale used to be, and cn must still eat it — if
-   this ever stops being true, the detection logic has changed and every green
-   result underneath became meaningless without anyone noticing. A passing
-   canary is a failure. */
+/* Canary. Everything below reports "all survive", and that is only worth
+   reading if this file can still SEE a dropped class. An unknown text-* is
+   what the type scale used to be, and a merger with no entry for it must still
+   eat it. A passing canary means the detection logic changed and every green
+   result underneath quietly stopped meaning anything. */
 checked++
 if (cn("text-notarealsize", "text-black").split(" ").includes("text-notarealsize"))
   failures.push({
     what: "canary",
-    detail: "cn no longer drops an unknown text-* — this audit can no longer detect the bug it exists for",
+    detail: "an unknown text-* is no longer dropped — this audit can no longer detect the bug it exists for",
   })
 
-for (const { what, names, partners } of GROUPS) {
+for (const { what, names, partner, foreign } of GROUPS) {
   if (!names.length) {
     failures.push({ what, detail: "no utilities discovered — this group would pass by doing nothing" })
     continue
   }
-  const lost = []
+  const broken = []
   for (const name of names) {
+    /* 1. Not dropped when it meets a different property. */
     checked++
-    if (!cn(name, "sr-only").split(" ").includes(name)) lost.push(`${name} vanishes on its own`)
-    for (const partner of partners) {
-      checked++
-      if (!cn(name, partner).split(" ").includes(name)) lost.push(`${name} is eaten by ${partner}`)
-    }
+    if (!cn(name, foreign).split(" ").includes(name)) broken.push(`${name} is eaten by ${foreign}`)
+
+    /* 2. Collapses with the stock class it replaces — in BOTH directions, or
+          it is not really in the same group. This is also the registration
+          test: a theme token added without a cn entry cannot collapse, so it
+          fails here. Checking the source TEXT instead was a false positive
+          waiting to happen — the control and spacing groups are built by a
+          helper and never appear as literals. Test behaviour, not source. */
+    checked += 2
+    const oursLast = cn(partner, name).split(" ")
+    const theirsLast = cn(name, partner).split(" ")
+    if (oursLast.length !== 1 || oursLast[0] !== name)
+      broken.push(`${partner} + ${name} -> "${oursLast.join(" ")}" (should collapse to ${name})`)
+    if (theirsLast.length !== 1 || theirsLast[0] !== partner)
+      broken.push(`${name} + ${partner} -> "${theirsLast.join(" ")}" (should collapse to ${partner})`)
   }
-  console.log(`  ${what.padEnd(13)} ${String(names.length).padStart(2)} utilities — ${lost.length ? `${lost.length} broken` : "all survive"}`)
-  for (const l of lost.slice(0, 5)) console.log(`      ${l}`)
-  if (lost.length) failures.push({ what, detail: `${lost.length} utility/utilities dropped by cn()` })
+  console.log(
+    `  ${what.padEnd(15)} ${String(names.length).padStart(2)} utilities — ${broken.length ? `${broken.length} broken` : "registered, collapse both ways"}`
+  )
+  for (const b of broken.slice(0, 4)) console.log(`      ${b}`)
+  if (broken.length) failures.push({ what, detail: `${broken.length} problem(s)` })
 }
 
 console.log(`\n${checked} checks — ${failures.length} group(s) failing`)
 if (failures.length) {
   console.log("")
-  for (const f of failures) console.log(`  ${f.what.padEnd(13)} ${f.detail}`)
+  for (const f of failures) console.log(`  ${f.what.padEnd(15)} ${f.detail}`)
   console.log("")
   process.exit(1)
 }
-console.log("PASS — every Minima utility survives cn()\n")
+console.log("PASS — every Minima utility is registered and displaces its stock counterpart\n")

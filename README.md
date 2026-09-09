@@ -70,6 +70,13 @@ would be the obvious choice and it is a trap: `cn()` carries a hardcoded list
 of font sizes, so a custom `text-body` is filed as a *colour*, collides with
 `text-muted-foreground`, and is silently dropped.
 
+**The components ship a configured `cn`.** The same hardcoded table has a
+second failure mode that naming cannot fix: an unrecognised utility gets its
+own private group, so it never *collapses* with the stock class it replaces and
+both survive — leaving the stylesheet order to decide instead of your
+`className`. `rounded-lg rounded-control-xs` rendered at 10px instead of 8, and
+`<Button className="h-control-lg" />` did nothing at all.
+
 ## Verified, not asserted
 
 Every rule ships with the thing that proves it. `npm run audit` runs eleven
@@ -85,7 +92,7 @@ prose       measure is readable, rhythm groups headings, links are not colour al
 native      the browser knows the scheme, every target clears 24px
 syntax      every token is legible on the code ground and none are confusable
 components  every component is expressed in tokens, no literals
-merge       every utility survives cn()
+merge       every utility is registered and displaces its stock counterpart
 registry    every item resolves, every dependency is an address
 ```
 

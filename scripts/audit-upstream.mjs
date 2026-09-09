@@ -113,7 +113,15 @@ const INTENTIONALLY_DROPPED = {
     "dark:bg",
   ],
   tabs: ["focus-visible:ring", "focus-visible:border", "focus-visible:outline"],
-  input: [],
+  /* stat and status are ours; there is no upstream to drift from. */
+  input: [
+    /* Same reason as button and tabs: app/state.css owns the focus ring for
+       every control. Input also carried `outline-none`, which suppressed the
+       system ring outright — it had no visible focus indicator at all until
+       that came out. */
+    "focus-visible:ring",
+    "focus-visible:border",
+  ],
 }
 
 /** `hover:bg-muted` -> `hover:bg`; `group-x/y:after:bottom-[-5px]` -> `after:bottom`. */

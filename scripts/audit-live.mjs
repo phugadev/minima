@@ -81,11 +81,19 @@ const browser = await chromium.launch()
   const ctx = await browser.newContext()
   const page = await ctx.newPage()
   await page.goto(URL, { waitUntil: "networkidle" })
+  /* If the app exposes a component matrix, walk that instead of whatever
+     happens to be at the top of the page — a focus ring is only proven on the
+     controls you actually tabbed to. */
+  const matrix = page.locator('[data-slot="tabs-trigger"]', { hasText: "Components" }).first()
+  if (await matrix.count()) {
+    await matrix.click()
+    await page.waitForSelector("[data-probe]")
+  }
   /* The theme is applied in an effect, and --focus lives behind it. Tabbing
      before that lands measures the fallback, not the ring. */
   await page.waitForFunction(() => document.documentElement.hasAttribute("data-theme"))
   const seen = []
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 80; i++) {
     await page.keyboard.press("Tab")
     /* Read on the NEXT frame, not this one. The ring must be correct
        immediately — that is the assertion — but a paint has to happen first
@@ -142,9 +150,24 @@ const browser = await chromium.launch()
     if (ring.colour !== ring.focusToken)
       fail("focus", `${ring.tag}${ring.label ? ` "${ring.label}"` : ""} ring is rgb(${ring.colour}), but --focus resolves to rgb(${ring.focusToken})`)
   }
+  const widths = new Set(seen.map((s) => s.width))
+  const offsets = new Set(seen.map((s) => s.offset))
+  /* One ring, everywhere. A control whose offset differs is either overriding
+     the system or — as happened here — still ANIMATING it: `transition-all`
+     covers outline-offset, so the ring grew from 0 to 2px and 52 of 78
+     controls measured mid-flight. A ring that expands into place is the same
+     defect as one that fades in from the wrong colour. */
+  checked += 2
+  if (widths.size > 1) fail("focus", `ring width is not uniform: ${[...widths].join("/")}px`)
+  if (offsets.size > 1)
+    fail("focus", `ring offset is not uniform: ${[...offsets].join("/")}px — overridden, or still animating`)
   console.log(
-    `focus           ${seen.length} controls tabbed, all ${seen[0]?.width}px offset ${seen[0]?.offset}px, rgb(${seen[0]?.colour}) alpha ${seen[0]?.alpha?.toFixed(2)}`
+    `focus           ${seen.length} controls tabbed — width ${[...widths].join("/")}px, offset ${[...offsets].join("/")}px, ` +
+      `rgb(${seen[0]?.colour}) alpha ${seen[0]?.alpha?.toFixed(2)}`
   )
+  checked++
+  if (seen.length < 20)
+    fail("focus", `only ${seen.length} controls were reachable by Tab — not enough to prove anything`)
   await ctx.close()
 }
 

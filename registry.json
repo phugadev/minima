@@ -38,17 +38,32 @@
       ]
     },
     {
+      "name": "cn",
+      "type": "registry:lib",
+      "title": "cn",
+      "description": "The class merger, taught about Minima's utilities. Without it a custom utility never collapses with the stock class it replaces, so both survive and the stylesheet order decides instead of your className.",
+      "dependencies": [
+        "cn"
+      ],
+      "files": [
+        {
+          "path": "registry/lib/cn.ts",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "button",
       "type": "registry:ui",
       "title": "Button",
       "description": "shadcn's button with every size and variant expressed in Minima tokens: control heights that follow density, radius that tracks height, and a destructive variant on an audited fill-and-text pairing.",
       "dependencies": [
         "@base-ui/react",
-        "class-variance-authority",
-        "cn"
+        "class-variance-authority"
       ],
       "registryDependencies": [
-        "phugadev/minima/theme"
+        "phugadev/minima/theme",
+        "phugadev/minima/cn"
       ],
       "files": [
         {
@@ -63,11 +78,11 @@
       "title": "Input",
       "description": "shadcn's input on Minima control heights, with a field text size that clears the 16px floor mobile Safari zooms below.",
       "dependencies": [
-        "@base-ui/react",
-        "cn"
+        "@base-ui/react"
       ],
       "registryDependencies": [
-        "phugadev/minima/theme"
+        "phugadev/minima/theme",
+        "phugadev/minima/cn"
       ],
       "files": [
         {
@@ -83,11 +98,11 @@
       "description": "shadcn's tabs with the grey-on-grey track replaced: the list is a recessed track and the active tab is a raised surface, so the selection reads in both modes.",
       "dependencies": [
         "@base-ui/react",
-        "class-variance-authority",
-        "cn"
+        "class-variance-authority"
       ],
       "registryDependencies": [
-        "phugadev/minima/theme"
+        "phugadev/minima/theme",
+        "phugadev/minima/cn"
       ],
       "files": [
         {
@@ -103,11 +118,11 @@
       "description": "A single measurement with an optional delta. Uses the figure register so digits align down a column, and treats tone as a state rather than a category.",
       "dependencies": [
         "class-variance-authority",
-        "cn",
         "lucide-react"
       ],
       "registryDependencies": [
-        "phugadev/minima/theme"
+        "phugadev/minima/theme",
+        "phugadev/minima/cn"
       ],
       "files": [
         {
@@ -122,11 +137,11 @@
       "title": "Status",
       "description": "A state as a chip: tinted ground, border, dot and label drawn from one hue at four different rungs.",
       "dependencies": [
-        "class-variance-authority",
-        "cn"
+        "class-variance-authority"
       ],
       "registryDependencies": [
-        "phugadev/minima/theme"
+        "phugadev/minima/theme",
+        "phugadev/minima/cn"
       ],
       "files": [
         {

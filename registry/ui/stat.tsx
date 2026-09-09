@@ -2,7 +2,7 @@ import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { ArrowDownRight, ArrowUpRight } from "lucide-react"
 
-import { cn } from "cn"
+import { cn } from "@/lib/cn"
 
 /**
  * Stat — a single measurement.

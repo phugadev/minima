@@ -102,8 +102,20 @@ npx shadcn@latest add phugadev/minima/stat     # a measurement with a delta
 npx shadcn@latest add phugadev/minima/status   # a state, as a chip
 ```
 
-Each declares `phugadev/minima/theme` as a dependency, so adding a component
-first will pull the theme in for you.
+Each declares `phugadev/minima/theme` and `phugadev/minima/cn` as dependencies,
+so adding a component first pulls both in for you.
+
+`cn` is the class merger, taught about Minima's utilities. It is not optional
+for the components and it is worth knowing why: every merger carries a
+hardcoded table of which utility belongs to which CSS property, and a custom
+one it has not heard of gets its own private group. It then never collapses
+with the stock class it replaces, both survive, and the stylesheet order
+decides instead of your `className` — so `<Button className="rounded-none" />`
+works or does not depending on how Tailwind happened to sort that build. With
+the configured `cn` it is deterministic: your class always wins.
+
+If you use `cn` from `@/lib/utils` elsewhere, that copy is unaffected. Only
+Minima's components import `@/lib/cn`.
 
 ## Optional — syntax highlighting
 
