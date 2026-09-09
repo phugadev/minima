@@ -46,7 +46,7 @@ theme reaches into a component you own.
 | **Space** | A 2x ladder (inset, gutter, stack, section) and three density modes. |
 | **Depth** | Four rungs, carried by shadow in light and by surface in dark. |
 | **Motion** | Four durations, three curves, and reduced motion enforced globally. |
-| **State** | Focus, hover, pressed and disabled, with a ring that clears 3:1 on every surface. |
+| **State** | Focus, hover, pressed and disabled, with a ring that clears 3:1 on every surface — on every element that takes focus, `contenteditable` included. |
 | **Syntax** | A code palette generated from the same ramps, for Prism, highlight.js or Shiki. |
 
 ## A few of the decisions

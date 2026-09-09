@@ -1926,13 +1926,56 @@
      hatch this was written for is intact.
 
      Anchors hid it: they carry no transition, so they snapped straight to the
-     right colour and measured perfectly while every button was wrong. */
-  :is(a, button, input, select, textarea, summary, [tabindex]) {
+     right colour and measured perfectly while every button was wrong.
+
+     ── Why contenteditable is spelled out three times ──────────────────────
+
+     The list is every element that takes focus without help, and
+     contenteditable is the one that is easy to forget: any rich-text editor is
+     one, and left out it fell through to whatever the browser draws — measured
+     as a 1px auto ring at half alpha with no offset, against the 2px solid
+     opaque ring at 2px offset everything else here gets.
+
+     `[contenteditable]:not([contenteditable="false"])` would be the tidy way to
+     write it and it is the wrong one: :not() also takes the specificity of its
+     argument, so that compound is (0,2,0) and :is() would inherit it. The rest
+     rule would then start beating a consumer's own single class, which is the
+     override this file is careful to leave intact. Three plain attribute
+     selectors are each (0,1,0), so the list stays where it was.
+
+     iframe, video[controls] and audio[controls] are focusable and deliberately
+     absent. They are media, not controls, and a ring held 2px off a video
+     player is not the same object as a ring around a button — the browser's own
+     treatment is better there. audit-install.mjs focuses all of them and prints
+     what each one got, so the split is visible rather than assumed. */
+  :is(
+      a,
+      button,
+      input,
+      select,
+      textarea,
+      summary,
+      [tabindex],
+      [contenteditable=""],
+      [contenteditable="true"],
+      [contenteditable="plaintext-only"]
+    ) {
     outline-color: var(--focus, currentColor);
     outline-offset: var(--focus-offset);
   }
 
-  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  :where(
+      a,
+      button,
+      input,
+      select,
+      textarea,
+      summary,
+      [tabindex],
+      [contenteditable=""],
+      [contenteditable="true"],
+      [contenteditable="plaintext-only"]
+    ):focus-visible {
     /* The fallback is load-bearing. --focus resolves through the theme's
        ramp, and an undefined colour makes the whole outline declaration
        invalid — CSS drops it silently and the control gets NO RING, which

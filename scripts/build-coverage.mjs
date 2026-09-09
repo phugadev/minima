@@ -135,6 +135,23 @@ const fixtures = [
   '        </p>',
   '      </article>',
   '      <div data-orientation="horizontal" data-variant-bridge className="data-horizontal:flex-col">x</div>',
+  /* Every element that takes focus without help. state.css claims a ring on
+     the first eight and deliberately leaves the last three to the browser;
+     audit-install focuses each one and holds the claim to the DOM rather than
+     to a selector nobody has read since it was written. */
+  '      <div data-focusables>',
+  '        <a href="#" data-f="a">x</a>',
+  '        <button data-f="button">x</button>',
+  '        <input data-f="input" />',
+  '        <select data-f="select"><option>x</option></select>',
+  '        <textarea data-f="textarea" />',
+  '        <details><summary data-f="summary">x</summary>x</details>',
+  '        <div tabIndex={0} data-f="tabindex">x</div>',
+  '        <div contentEditable suppressContentEditableWarning data-f="contenteditable">x</div>',
+  '        <iframe title="i" data-f="iframe" data-unowned />',
+  '        <video controls data-f="video" data-unowned />',
+  '        <audio controls data-f="audio" data-unowned />',
+  '      </div>',
 ]
 
 const page = [

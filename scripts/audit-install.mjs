@@ -184,6 +184,59 @@ for (const mode of ["light", "dark"]) {
   for (const o of lost)
     fail(mode, `prose ${o.tag.toLowerCase()}`, `${o.prop} is ${o.actual}, the utility asked for ${o.expected} — a .prose rule is outranking it`)
 
+  /* Every focusable element, focused for real. audit-live tabs through a page
+     and can only check what happens to be on it; this checks the LIST — and the
+     list is where contenteditable went missing, falling through to a 1px auto
+     ring at half alpha while every other control had 2px solid opaque. */
+  const focusables = await page.evaluate(async () => {
+    const out = []
+    for (const el of document.querySelectorAll("[data-f]")) {
+      el.focus()
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      const s = getComputedStyle(el)
+      out.push({
+        what: el.getAttribute("data-f"),
+        owned: !el.hasAttribute("data-unowned"),
+        focused: document.activeElement === el,
+        width: s.outlineWidth,
+        style: s.outlineStyle,
+        colour: s.outlineColor,
+        offset: s.outlineOffset,
+      })
+    }
+    document.activeElement?.blur?.()
+    const probe = document.createElement("i")
+    probe.style.outlineColor = "var(--focus)"
+    document.body.appendChild(probe)
+    const focus = getComputedStyle(probe).outlineColor
+    probe.remove()
+    return { rows: out, focus }
+  })
+  const owned = focusables.rows.filter((r) => r.owned)
+  const unowned = focusables.rows.filter((r) => !r.owned)
+  checked += owned.length
+  const ringless = owned.filter(
+    (r) =>
+      !r.focused ||
+      r.style !== "solid" ||
+      parseFloat(r.width) < 2 ||
+      parseFloat(r.offset) < 1 ||
+      r.colour !== focusables.focus
+  )
+  console.log(
+    `  ${"focusable elements".padEnd(22)} ${String(owned.length).padStart(3)}   ` +
+      (ringless.length ? `${ringless.length} without the ring` : "all carry the ring") +
+      `; left to the browser: ${unowned.map((r) => r.what).join(", ")}`
+  )
+  for (const r of ringless)
+    fail(
+      mode,
+      `focus ${r.what}`,
+      r.focused
+        ? `got ${r.width} ${r.style} ${r.colour} at ${r.offset}, expected 2px solid ${focusables.focus} at the offset — it is not in state.css's list`
+        : "did not take focus, so nothing was proven about it"
+    )
+
   /* And the variant bridge, which is shadcn's file rather than ours. */
   checked++
   const bridge = await page.evaluate(() =>

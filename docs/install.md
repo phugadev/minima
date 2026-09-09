@@ -120,6 +120,10 @@ Three things you get that are not cosmetic:
   is declared. Without it a dark app keeps light scrollbars.
 - **Every focusable control gets a ring** that clears 3:1 on every surface it
   can sit on, held off the control by an offset so it works on any background.
+  That covers links, buttons, inputs, selects, textareas, `summary`, anything
+  with `tabindex`, and `contenteditable`. `iframe`, `video` and `audio` are
+  left to the browser on purpose — they are media, not controls, and a ring
+  held off a video player is not the same object as a ring around a button.
 - **`prefers-reduced-motion` is honoured globally**, including for Tailwind's
   own duration utilities and any keyframes you have.
 
