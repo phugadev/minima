@@ -26,7 +26,6 @@
   --canvas: var(--gray-bg-subtle);
   --surface: var(--gray-bg);
   --fill: var(--gray-fill);
-  --fill-hover: var(--gray-fill-hover);
 
   /* --- shadcn's eighteen. No new names. ------------------------------- */
   --background: var(--canvas);
@@ -147,9 +146,18 @@
      wrote — and that one re-derives --radius-sm..4xl from --radius with fixed
      ratios. Later wins, and there is no import position that changes it.
 
-     Overriding the generated .rounded-* utilities instead was tried and is
-     worse: it also beats the consumer's own `rounded-none`, which is a bigger
-     failure than the one it fixes.
+     Overriding the generated .rounded-* utilities from here was tried and
+     rejected. The first reason given for rejecting it was wrong and is worth
+     recording as wrong: it looked like the override beat the consumer's own
+     `rounded-none`, because `rounded-xl rounded-none` measured 12px. Then the
+     source positions were measured — Tailwind emits `.rounded-none` at 14546
+     and `.rounded-xl` at 14653 — so that happens in any Tailwind project, with
+     or without Minima, and the override had nothing to do with it.
+
+     The real reason not to do it is smaller and holds up: redefining framework
+     utilities from a theme file takes away the consumer's own customisation
+     path. Someone who sets --radius-xl in their `@theme` should get a 
+     different `rounded-xl`, and against a hard-coded utility they would not.
 
      So Minima anchors the chain instead of fighting it. Pointing --radius at
      the control rung makes shadcn's 0.6x and 1x steps land exactly on the mark
@@ -165,6 +173,5 @@
   --canvas: var(--gray-bg);
   --surface: var(--gray-bg-subtle);
   --fill: var(--gray-fill);
-  --fill-hover: var(--gray-fill-hover);
   --focus: var(--blue-text);
 }

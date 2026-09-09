@@ -51,18 +51,40 @@
 @layer base {
   /* The ring's COLOUR is set at rest, before anything is focused.
      Controls carry `transition-all`, and that includes outline-color — so
-     without this the ring animates in from currentColor and visibly flashes
-     grey before turning blue — and the OFFSET does the same thing, growing
-     from 0 to 2px so the ring expands into place. A focus ring is a switch,
-     not a transition:
-     someone tabbing quickly would see a trail of grey rings and never the real
-     one. Only outline-style and width change on focus, and neither animates,
-     so the ring now appears at full strength on the frame it is asked for.
+     without this the ring animates in from whatever it was, and the OFFSET
+     does the same thing, growing from 0 to 2px so the ring expands into place.
+     A focus ring is a switch, not a transition: someone tabbing quickly would
+     see a trail of half-drawn rings and never the real one. Only outline-style
+     and width change on focus, and neither animates, so the ring appears at
+     full strength on the frame it is asked for.
 
      It is also why the first version of this measured wrong — the audit read
      the outline the instant after Tab and caught the transition's first frame,
-     which is exactly what a person tabbing fast would see. */
-  :where(a, button, input, select, textarea, summary, [tabindex]) {
+     which is exactly what a person tabbing fast would see.
+
+     ── Why :is() and not :where() ──────────────────────────────────────────
+
+     This rule was :where(), for zero specificity, so a component could
+     override it without an !important arms race. That is a good instinct and
+     it did not survive contact with a real install.
+
+     `shadcn init` writes `* { @apply border-border outline-ring/50 }` into its
+     own @layer base — and `*` is also zero. Two zero-specificity rules in one
+     layer are decided by source order, CSS puts every @import at the top of
+     the file, so shadcn's is always later and always wins. Every control then
+     sat at rest on a ring at FIFTY PERCENT ALPHA, and `transition-all` dutifully
+     animated it up to full over the control's 150ms. Measured in a fresh
+     install: 0.5 alpha at frame 0, 0.85 at frame 4, opaque by frame 12 — so a
+     fast tab shows a ring at roughly half the contrast audit-state certifies.
+
+     :is() takes the highest specificity of its arguments — (0,1,0) here, from
+     [tabindex] — which is the smallest amount that beats `*`. A consumer's own
+     class-based rule still ties and still wins on source order, so the escape
+     hatch this was written for is intact.
+
+     Anchors hid it: they carry no transition, so they snapped straight to the
+     right colour and measured perfectly while every button was wrong. */
+  :is(a, button, input, select, textarea, summary, [tabindex]) {
     outline-color: var(--focus, currentColor);
     outline-offset: var(--focus-offset);
   }

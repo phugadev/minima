@@ -81,7 +81,7 @@ both survive — leaving the stylesheet order to decide instead of your
 
 ## Verified, not asserted
 
-Every rule ships with the thing that proves it. `npm run audit` runs eleven
+Every rule ships with the thing that proves it. `npm run audit` runs twelve
 checks over the built CSS and the registry:
 
 ```
@@ -93,15 +93,31 @@ state       the focus ring clears 3:1 on every surface a control can sit on
 prose       measure is readable, rhythm groups headings, links are not colour alone
 native      the browser knows the scheme, every target clears 24px
 syntax      every token is legible on the code ground and none are confusable
+cascade     no dangling var(), and nothing unlayered outranks a utility
 components  every component is expressed in tokens, no literals
 merge       every utility is registered and displaces its stock counterpart
 registry    every item resolves, every dependency is an address
 ```
 
-`npm run audit:live` adds the two that need a real browser — reduced motion
-under media emulation, and focus rings that actually render. It is the only
-runner that needs a consuming app, since there is nothing to render here:
-`URL=http://localhost:3000 npm run audit:live`.
+Two more need a real browser, because they are about what a consumer's build
+actually produces rather than about a value:
+
+```bash
+URL=http://localhost:3000 npm run audit:live      # reduced motion, focus rings
+
+APP=../some-install npm run coverage              # generate the page…
+cd ../some-install && npm run build && npx next start -p 3210
+URL=http://localhost:3210 APP=../some-install npm run audit:install
+```
+
+`audit:install` is the one that closes the longest-running hole here. Tailwind
+only emits a utility it can see used in scanned source, so measuring one that
+nothing asked for reads exactly like a broken token — a false alarm that cost a
+detour six separate times. The coverage page is *generated from the theme file*,
+so every token appears in scanned source by construction and a missing utility
+can only mean the theme is wrong. It then separates the three bugs that share
+that symptom: the token is undefined, the utility was not emitted, or it points
+somewhere else.
 
 Each of those exists because something broke. The registry check exists because
 bare `registryDependencies` resolve to shadcn's items rather than ours, and an

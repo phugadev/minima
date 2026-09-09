@@ -957,7 +957,6 @@
   --canvas: var(--gray-bg-subtle);
   --surface: var(--gray-bg);
   --fill: var(--gray-fill);
-  --fill-hover: var(--gray-fill-hover);
 
   /* --- shadcn's eighteen. No new names. ------------------------------- */
   --background: var(--canvas);
@@ -1078,9 +1077,18 @@
      wrote — and that one re-derives --radius-sm..4xl from --radius with fixed
      ratios. Later wins, and there is no import position that changes it.
 
-     Overriding the generated .rounded-* utilities instead was tried and is
-     worse: it also beats the consumer's own `rounded-none`, which is a bigger
-     failure than the one it fixes.
+     Overriding the generated .rounded-* utilities from here was tried and
+     rejected. The first reason given for rejecting it was wrong and is worth
+     recording as wrong: it looked like the override beat the consumer's own
+     `rounded-none`, because `rounded-xl rounded-none` measured 12px. Then the
+     source positions were measured — Tailwind emits `.rounded-none` at 14546
+     and `.rounded-xl` at 14653 — so that happens in any Tailwind project, with
+     or without Minima, and the override had nothing to do with it.
+
+     The real reason not to do it is smaller and holds up: redefining framework
+     utilities from a theme file takes away the consumer's own customisation
+     path. Someone who sets --radius-xl in their `@theme` should get a 
+     different `rounded-xl`, and against a hard-coded utility they would not.
 
      So Minima anchors the chain instead of fighting it. Pointing --radius at
      the control rung makes shadcn's 0.6x and 1x steps land exactly on the mark
@@ -1096,7 +1104,6 @@
   --canvas: var(--gray-bg);
   --surface: var(--gray-bg-subtle);
   --fill: var(--gray-fill);
-  --fill-hover: var(--gray-fill-hover);
   --focus: var(--blue-text);
 }
 
@@ -1108,9 +1115,11 @@
 
    Minima re-points Tailwind's OWN scales at its rungs rather than adding a
    parallel set of names, and that is what lets an UNTOUCHED shadcn component
-   pick the system up. A card asking for `rounded-xl` and `shadow-sm` gets the
-   panel radius and the raised shadow without being edited; `ease-out` gets
-   Minima's curve. Nothing here requires a component change.
+   pick the system up. A card asking for `shadow-sm` gets the raised shadow
+   without being edited; `ease-out` gets Minima's curve. Nothing here requires
+   a component change.
+
+   Radius is the exception, and the block at the bottom of this file says so.
 
    The document is deliberately left alone. Minima adds tokens and re-points
    scales — it does not set your body background or your typeface. The only
@@ -1154,8 +1163,24 @@
   --radius-control-sm: var(--rung-control-sm, var(--rung-control));
   --radius-control-md: var(--rung-control-md, var(--rung-control));
   --radius-control-lg: var(--rung-control-lg, var(--rung-control));
-  /* shadcn's own scale, re-pointed at the same rungs so stock components
-     inherit the geometry without being edited. */
+  /* shadcn's own scale, re-pointed at the same rungs.
+
+     These seven lines only take effect in a project that has NOT run
+     `shadcn init`. In one that has, its own `@theme` re-derives all seven from
+     `--radius` with fixed ratios, and it always comes after this file — CSS
+     puts every `@import` at the top, so there is no import position that wins.
+     Measured in a fresh install: sm 6, md 8, lg 10, xl 14, 2xl 18, 3xl 22,
+     4xl 26.
+
+     Two of those land on a rung anyway, because `--radius` is anchored on the
+     control rung in semantic.css: sm at 0.6x is the mark rung exactly, lg at
+     1x is the control rung exactly, and those are the two shadcn's own
+     components reach for. The other five are shadcn's numbers, not Minima's,
+     and docs/install.md says which and how to hand them over.
+
+     They stay declared because the plain-Tailwind case is real and this is the
+     only thing serving it. scripts/audit-install.mjs measures all seven against
+     a real install so the split above is checked rather than remembered. */
   --radius-sm: var(--rung-mark);
   --radius-md: var(--rung-control);
   --radius-lg: var(--rung-control);
@@ -1357,15 +1382,24 @@
 @layer components {
   /* The registers themselves. A size utility says how big; these say which
      voice, and they are deliberately separate so `type-label` can be used
-     without `.signal` when something wants the metrics but not the case. */
+     without `.signal` when something wants the metrics but not the case.
+
+     The fallback stack on --font-mono is not decoration. Minima does not ship
+     a typeface — it borrows Tailwind's --font-mono — and shadcn's own @theme
+     re-points that at --font-geist-mono, which only exists if the app wired
+     up next/font. An unresolved font-family is invalid at computed-value time,
+     so it INHERITS: the figure register would quietly become the reading one,
+     digits would stop aligning, and the file above claims that alignment is
+     the reason the register exists at all. A named fallback keeps the claim
+     true when the variable is missing. */
   .signal {
-    font-family: var(--font-mono);
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
     text-transform: uppercase;
     font-variant-numeric: tabular-nums;
   }
 
   .figure {
-    font-family: var(--font-mono);
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
   }
@@ -1860,18 +1894,40 @@
 @layer base {
   /* The ring's COLOUR is set at rest, before anything is focused.
      Controls carry `transition-all`, and that includes outline-color — so
-     without this the ring animates in from currentColor and visibly flashes
-     grey before turning blue — and the OFFSET does the same thing, growing
-     from 0 to 2px so the ring expands into place. A focus ring is a switch,
-     not a transition:
-     someone tabbing quickly would see a trail of grey rings and never the real
-     one. Only outline-style and width change on focus, and neither animates,
-     so the ring now appears at full strength on the frame it is asked for.
+     without this the ring animates in from whatever it was, and the OFFSET
+     does the same thing, growing from 0 to 2px so the ring expands into place.
+     A focus ring is a switch, not a transition: someone tabbing quickly would
+     see a trail of half-drawn rings and never the real one. Only outline-style
+     and width change on focus, and neither animates, so the ring appears at
+     full strength on the frame it is asked for.
 
      It is also why the first version of this measured wrong — the audit read
      the outline the instant after Tab and caught the transition's first frame,
-     which is exactly what a person tabbing fast would see. */
-  :where(a, button, input, select, textarea, summary, [tabindex]) {
+     which is exactly what a person tabbing fast would see.
+
+     ── Why :is() and not :where() ──────────────────────────────────────────
+
+     This rule was :where(), for zero specificity, so a component could
+     override it without an !important arms race. That is a good instinct and
+     it did not survive contact with a real install.
+
+     `shadcn init` writes `* { @apply border-border outline-ring/50 }` into its
+     own @layer base — and `*` is also zero. Two zero-specificity rules in one
+     layer are decided by source order, CSS puts every @import at the top of
+     the file, so shadcn's is always later and always wins. Every control then
+     sat at rest on a ring at FIFTY PERCENT ALPHA, and `transition-all` dutifully
+     animated it up to full over the control's 150ms. Measured in a fresh
+     install: 0.5 alpha at frame 0, 0.85 at frame 4, opaque by frame 12 — so a
+     fast tab shows a ring at roughly half the contrast audit-state certifies.
+
+     :is() takes the highest specificity of its arguments — (0,1,0) here, from
+     [tabindex] — which is the smallest amount that beats `*`. A consumer's own
+     class-based rule still ties and still wins on source order, so the escape
+     hatch this was written for is intact.
+
+     Anchors hid it: they carry no transition, so they snapped straight to the
+     right colour and measured perfectly while every button was wrong. */
+  :is(a, button, input, select, textarea, summary, [tabindex]) {
     outline-color: var(--focus, currentColor);
     outline-offset: var(--focus-offset);
   }
@@ -2008,183 +2064,205 @@
    ground has to read without pushing anything around.
 --------------------------------------------------------------------------- */
 
-.prose {
-  /* 68 characters. The comfortable band is roughly 45–90; past that the eye
-     loses its place on the return sweep, below it the text feels chopped. */
-  --measure: 68ch;
+/* ── Why this is @layer components ────────────────────────────────────────
 
-  /* Rhythm, in em so it tracks whatever size the block is set at.
+   Everything below has to lose to a utility. Tailwind puts its own utilities in
+   `@layer utilities`, and an UNLAYERED rule beats every layer there is — so
+   left at the top level, `.prose a` outranks `text-green-text`, `.prose code`
+   outranks `bg-transparent`, and `.prose > * + *` outranks `mt-0`. Measured in
+   a real install: four out of four consumer overrides inside `.prose` were
+   silently ignored, with the className present in the DOM and doing nothing.
 
-     lead > flow > bind is the same Gestalt argument the spacing ladder makes:
-     a heading needs MORE room above it than below, so it groups with the
-     content it introduces rather than floating between two blocks. Equal
-     space above and below is the single most common reason a heading looks
-     detached from its own section. */
-  --prose-flow: 1.1em;
-  --prose-lead: 2.2em;
-  --prose-bind: 0.6em;
+   That is the same failure the configured `cn` exists to prevent, arriving by a
+   different route — the author writes a class, the class is in the markup, and
+   the cascade quietly picks something else. A prose layer is a set of defaults
+   for elements nobody put a class on. It has no business winning against one
+   the author wrote.
 
-  max-width: var(--measure);
-  font-size: 1rem;
-  line-height: 1.7;
-  /* The reading step, not the strong one. Body prose at maximum contrast is a
-     glare rather than a virtue, and it leaves emphasis nowhere to go: if the
-     paragraph is already as dark as the ink gets, a heading can only differ by
-     size and weight. Lifting the body gives the hierarchy a third dimension. */
-  color: var(--gray-reading);
-  text-wrap: pretty;
-}
+   `.signal`, `.figure` and the syntax bindings were already layered. This file
+   was the only one that was not.
+--------------------------------------------------------------------------- */
 
-.prose > * + * {
-  margin-top: var(--prose-flow);
-}
+@layer components {
 
-.prose :is(h1, h2, h3, h4) {
-  /* Full contrast. This is the half of the pairing that makes the body's lift
-     read as a decision rather than as washed-out text. */
-  color: var(--foreground);
-  margin-top: var(--prose-lead);
-  margin-bottom: var(--prose-bind);
-  text-wrap: balance;
-}
-.prose > :is(h1, h2, h3, h4) + * {
-  margin-top: var(--prose-bind);
-}
-.prose > :first-child {
-  margin-top: 0;
-}
+  .prose {
+    /* 68 characters. The comfortable band is roughly 45–90; past that the eye
+       loses its place on the return sweep, below it the text feels chopped. */
+    --measure: 68ch;
 
-/* The reading register, at prose sizes. */
-.prose h1 {
-  font-size: var(--type-title);
-  line-height: 1.15;
-  letter-spacing: -0.022em;
-  font-weight: 500;
-}
-.prose h2 {
-  font-size: var(--type-heading);
-  line-height: 1.3;
-  letter-spacing: -0.015em;
-  font-weight: 500;
-}
-.prose :is(h3, h4) {
-  font-size: var(--type-subheading);
-  line-height: 1.4;
-  letter-spacing: -0.01em;
-  font-weight: 500;
-}
+    /* Rhythm, in em so it tracks whatever size the block is set at.
 
-/* ── Texture ─────────────────────────────────────────────────────────────── */
+       lead > flow > bind is the same Gestalt argument the spacing ladder makes:
+       a heading needs MORE room above it than below, so it groups with the
+       content it introduces rather than floating between two blocks. Equal
+       space above and below is the single most common reason a heading looks
+       detached from its own section. */
+    --prose-flow: 1.1em;
+    --prose-lead: 2.2em;
+    --prose-bind: 0.6em;
 
-.prose :is(strong, b) {
-  color: var(--foreground);
-  font-weight: 600;
-}
+    max-width: var(--measure);
+    font-size: 1rem;
+    line-height: 1.7;
+    /* The reading step, not the strong one. Body prose at maximum contrast is a
+       glare rather than a virtue, and it leaves emphasis nowhere to go: if the
+       paragraph is already as dark as the ink gets, a heading can only differ by
+       size and weight. Lifting the body gives the hierarchy a third dimension. */
+    color: var(--gray-reading);
+    text-wrap: pretty;
+  }
 
-/* Colour AND underline, never one alone. Colour alone fails anyone who cannot
-   distinguish it (WCAG 1.4.1); underline alone is hard to scan in a dense
-   page. `from-font` keeps the rule at the weight the typeface intends. */
-.prose a {
-  color: var(--blue-text);
-  text-decoration: underline;
-  text-decoration-thickness: from-font;
-  text-underline-offset: 0.2em;
-  transition: color var(--motion-quick) var(--ease-out);
-}
-.prose a:hover {
-  color: var(--blue-text-strong);
-}
+  .prose > * + * {
+    margin-top: var(--prose-flow);
+  }
 
-.prose code {
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-  /* The tint, so it reads on the page, on a card, or over an image — the one
-     place inline code actually lands unpredictably. */
-  background: var(--gray-tint);
-  border-radius: var(--rung-mark);
-  padding: 0.1em 0.35em;
-  /* So a span that wraps across lines keeps its ground and its corners on
-     both fragments instead of one long torn rectangle. */
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-}
+  .prose :is(h1, h2, h3, h4) {
+    /* Full contrast. This is the half of the pairing that makes the body's lift
+       read as a decision rather than as washed-out text. */
+    color: var(--foreground);
+    margin-top: var(--prose-lead);
+    margin-bottom: var(--prose-bind);
+    text-wrap: balance;
+  }
+  .prose > :is(h1, h2, h3, h4) + * {
+    margin-top: var(--prose-bind);
+  }
+  .prose > :first-child {
+    margin-top: 0;
+  }
 
-.prose kbd {
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-  background: var(--surface-raised);
-  border: 1px solid var(--gray-hairline-strong);
-  border-radius: var(--rung-mark);
-  box-shadow: var(--depth-raised);
-  color: var(--foreground);
-  padding: 0.15em 0.4em;
-}
+  /* The reading register, at prose sizes. */
+  .prose h1 {
+    font-size: var(--type-title);
+    line-height: 1.15;
+    letter-spacing: -0.022em;
+    font-weight: 500;
+  }
+  .prose h2 {
+    font-size: var(--type-heading);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    font-weight: 500;
+  }
+  .prose :is(h3, h4) {
+    font-size: var(--type-subheading);
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    font-weight: 500;
+  }
 
-.prose pre {
-  font-family: var(--font-mono);
-  font-size: 0.875em;
-  line-height: 1.6;
-  /* The FILL, not the tint — colour-roles rule 5. A code block is the largest
-     text-on-a-tinted-ground surface in the system, and a tint reproduces its
-     step only over paper or ink: over the page it lands darker, which cost the
-     string colour its contrast floor in light mode (4.32:1). Inline code keeps
-     the tint because it is a few words on an unpredictable ground; a block is
-     a lot of text on a known one. */
-  background: var(--gray-fill);
-  border: 1px solid var(--border);
-  border-radius: var(--rung-panel);
-  padding: var(--space-gutter);
-  overflow-x: auto;
-}
-/* Inside a block, the ground is the block's. Nesting the inline treatment
-   gives you a tint on a tint and a radius on every token. */
-.prose pre code {
-  background: none;
-  padding: 0;
-  font-size: inherit;
-  border-radius: 0;
-}
+  /* ── Texture ─────────────────────────────────────────────────────────────── */
 
-/* ── Blocks ──────────────────────────────────────────────────────────────── */
+  .prose :is(strong, b) {
+    color: var(--foreground);
+    font-weight: 600;
+  }
 
-.prose :is(ul, ol) {
-  padding-left: 1.4em;
-}
-.prose li::marker {
-  color: var(--muted-foreground);
-}
-/* Items in a list are one group; they sit closer than paragraphs do. */
-.prose li + li {
-  margin-top: 0.35em;
-}
-.prose li > :is(ul, ol) {
-  margin-top: 0.35em;
-}
-.prose ul {
-  list-style: disc;
-}
-.prose ol {
-  list-style: decimal;
-}
+  /* Colour AND underline, never one alone. Colour alone fails anyone who cannot
+     distinguish it (WCAG 1.4.1); underline alone is hard to scan in a dense
+     page. `from-font` keeps the rule at the weight the typeface intends. */
+  .prose a {
+    color: var(--blue-text);
+    text-decoration: underline;
+    text-decoration-thickness: from-font;
+    text-underline-offset: 0.2em;
+    transition: color var(--motion-quick) var(--ease-out);
+  }
+  .prose a:hover {
+    color: var(--blue-text-strong);
+  }
 
-.prose blockquote {
-  border-left: 2px solid var(--gray-hairline-strong);
-  padding-left: var(--space-gutter);
-  color: var(--muted-foreground);
-}
+  .prose code {
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 0.9em;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    /* The tint, so it reads on the page, on a card, or over an image — the one
+       place inline code actually lands unpredictably. */
+    background: var(--gray-tint);
+    border-radius: var(--rung-mark);
+    padding: 0.1em 0.35em;
+    /* So a span that wraps across lines keeps its ground and its corners on
+       both fragments instead of one long torn rectangle. */
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+  }
 
-.prose hr {
-  border: 0;
-  border-top: 1px solid var(--border);
-  margin-top: var(--prose-lead);
-  margin-bottom: var(--prose-lead);
-}
+  .prose kbd {
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 0.85em;
+    background: var(--surface-raised);
+    border: 1px solid var(--gray-hairline-strong);
+    border-radius: var(--rung-mark);
+    box-shadow: var(--depth-raised);
+    color: var(--foreground);
+    padding: 0.15em 0.4em;
+  }
 
-.prose :is(figcaption, small) {
-  font-size: var(--type-caption);
-  color: var(--muted-foreground);
+  .prose pre {
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    font-size: 0.875em;
+    line-height: 1.6;
+    /* The FILL, not the tint — colour-roles rule 5. A code block is the largest
+       text-on-a-tinted-ground surface in the system, and a tint reproduces its
+       step only over paper or ink: over the page it lands darker, which cost the
+       string colour its contrast floor in light mode (4.32:1). Inline code keeps
+       the tint because it is a few words on an unpredictable ground; a block is
+       a lot of text on a known one. */
+    background: var(--gray-fill);
+    border: 1px solid var(--border);
+    border-radius: var(--rung-panel);
+    padding: var(--space-gutter);
+    overflow-x: auto;
+  }
+  /* Inside a block, the ground is the block's. Nesting the inline treatment
+     gives you a tint on a tint and a radius on every token. */
+  .prose pre code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+    border-radius: 0;
+  }
+
+  /* ── Blocks ──────────────────────────────────────────────────────────────── */
+
+  .prose :is(ul, ol) {
+    padding-left: 1.4em;
+  }
+  .prose li::marker {
+    color: var(--muted-foreground);
+  }
+  /* Items in a list are one group; they sit closer than paragraphs do. */
+  .prose li + li {
+    margin-top: 0.35em;
+  }
+  .prose li > :is(ul, ol) {
+    margin-top: 0.35em;
+  }
+  .prose ul {
+    list-style: disc;
+  }
+  .prose ol {
+    list-style: decimal;
+  }
+
+  .prose blockquote {
+    border-left: 2px solid var(--gray-hairline-strong);
+    padding-left: var(--space-gutter);
+    color: var(--muted-foreground);
+  }
+
+  .prose hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin-top: var(--prose-lead);
+    margin-bottom: var(--prose-lead);
+  }
+
+  .prose :is(figcaption, small) {
+    font-size: var(--type-caption);
+    color: var(--muted-foreground);
+  }
 }
 
 /* ═══ syntax ════════════════════════════════════════════════════════════ */

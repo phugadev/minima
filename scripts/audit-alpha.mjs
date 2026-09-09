@@ -27,6 +27,7 @@ import {
 } from "./generate-scales.mjs"
 
 const CSS = readFileSync(new URL("../src/ramps.css", import.meta.url), "utf8")
+const DEPTH = readFileSync(new URL("../src/depth.css", import.meta.url), "utf8")
 const NAMES = ["gray", ...HUES.map((h) => h.name)]
 const TOLERANCE = 1 / 255
 
@@ -38,6 +39,16 @@ function blockOf(selector) {
   const vars = {}
   for (const [, k, v] of body.matchAll(/--([\w-]+):\s*([^;]+);/g)) vars[k] = v.trim()
   return vars
+}
+
+/** The same, for a file that is not ramps.css. */
+function declarationsIn(css, selector) {
+  const start = css.indexOf(`${selector} {`)
+  if (start === -1) return {}
+  const body = css.slice(start, css.indexOf("\n}", start))
+  const out = {}
+  for (const [, k, v] of body.matchAll(/--([\w-]+):\s*([^;]+);/g)) out[k] = v.trim()
+  return out
 }
 
 /* Role names are aliases — `--red-text: var(--red-9)` — so anything measured
@@ -147,8 +158,18 @@ for (const [mode, selector] of [
      and the surface above it — near-black has nowhere to go — so elevation
      there is carried by the surface being lighter and by a border, not by the
      scrim. Printing the number keeps that honest instead of letting a floor
-     quietly encode a fiction. */
-  const surface = parseOklch(vars[mode === "light" ? "gray-1" : "gray-2"])
+     quietly encode a fiction.
+
+     The surface is read from depth.css rather than assumed to be gray-1/gray-2.
+     It used to be assumed, and in dark that is --surface-RAISED, not the modal
+     — so the line said "dialog surface" while measuring a card. An unasserted
+     number is still a number somebody will act on. */
+  const modal = declarationsIn(
+    DEPTH,
+    mode === "light" ? ':root[data-theme="minima"]' : ':root[data-theme="minima"].dark'
+  )["surface-modal"]
+  if (!modal) throw new Error("no --surface-modal in depth.css — the scrim report would describe the wrong surface")
+  const surface = parseOklch(resolve(vars, modal))
   const separation = contrast(luminanceOf(surface), luminanceOf(scrimmed))
   console.log(
     `${mode.padEnd(6)} scrim ${String(SCRIM[mode] * 100).padStart(3)}%  ` +

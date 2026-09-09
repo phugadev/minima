@@ -88,7 +88,19 @@ for (const file of OWNED) {
    The band is on the RATIO, not the value. Sizes are allowed to share a radius
    (10px suits both 28 and 32); what they may not do is drift apart in shape. */
 const RATIO_SPREAD = 1.25
-const CONTROL_PX = { xs: 24, sm: 28, md: 32, lg: 36 }
+/* Read from space.css, not typed here. These were a hardcoded
+   { xs: 24, sm: 28, md: 32, lg: 36 }, which is a list kept in two places and
+   therefore a list that will eventually disagree with itself: retuning the
+   ladder would have left this check comparing new radii against old heights
+   and still printing PASS. */
+const CONTROL_PX = {}
+{
+  const space = readFileSync(new URL("../src/space.css", import.meta.url), "utf8")
+  const root = space.slice(space.indexOf(":root {"), space.indexOf("\n}", space.indexOf(":root {")))
+  for (const [, k, v] of root.matchAll(/--control-(\w+):\s*([\d.]+)rem/g)) CONTROL_PX[k] = Number(v) * 16
+  if (Object.keys(CONTROL_PX).length < 4)
+    throw new Error("could not read the control ladder from space.css — the ratio checks would compare against nothing")
+}
 const RADIUS_PX = {}
 {
   const minima = readFileSync(new URL("../src/semantic.css", import.meta.url), "utf8")
@@ -129,13 +141,27 @@ if (radiusReport) console.log(`radius/height   ${radiusReport}`)
 if (padReport) console.log(`padding/height  ${padReport}`)
 console.log("")
 
+/* Anything in registry/ui that nobody has claimed in OWNED. The prefix here
+   used to be `components/ui/`, left over from before the registry layout, so
+   nothing ever matched and every ported component was reported as unported —
+   a list that was wrong in the one direction that hides a real gap: a file
+   shipped through the registry and scanned by no rule at all. */
 const all = readdirSync(new URL("../registry/ui", import.meta.url))
   .filter((f) => f.endsWith(".tsx"))
-  .map((f) => `components/ui/${f}`)
-const unported = all.filter((f) => !OWNED.includes(f))
+  .map((f) => `registry/ui/${f}`)
+const unclaimed = all.filter((f) => !OWNED.includes(f))
 
-console.log(`owned    ${OWNED.length} component(s)`)
-console.log(`unported ${unported.length}: ${unported.map((f) => f.split("/").pop().replace(".tsx", "")).join(", ")}`)
+console.log(`owned     ${OWNED.length} of ${all.length} component file(s) in registry/ui`)
+if (unclaimed.length) {
+  console.log(`unclaimed ${unclaimed.length}: ${unclaimed.map((f) => f.split("/").pop()).join(", ")}`)
+  findings.push({
+    file: "scripts/audit-components.mjs",
+    line: 0,
+    rule: "unclaimed component",
+    hit: unclaimed.join(", "),
+    why: "shipped through the registry but absent from OWNED, so no rule above has ever looked at it",
+  })
+}
 console.log(`\n${OWNED.length * RULES.length} checks — ${findings.length} literal(s) found`)
 
 if (findings.length) {

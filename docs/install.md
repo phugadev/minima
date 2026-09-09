@@ -22,6 +22,19 @@ npx shadcn@latest init
 same class shadcn and `next-themes` use. If you already have a theme toggle,
 it already works.
 
+**`@import "shadcn/tailwind.css"` in your global stylesheet — only if you take
+the components.** A recent `shadcn init` writes this line for you. It is where
+the `data-horizontal`, `data-vertical` and `data-active` variants are defined,
+and shadcn's own tabs — which Minima's is forked from — depend on them. Without
+it Tailwind falls back to its built-in `data-horizontal`, which looks for a
+`data-horizontal` attribute that Base UI never sets, so the tabs list lays out
+sideways and the `line` variant's underline collapses to zero height. Measured,
+not guessed: `flex-direction: row` instead of `column`, `height: 0px` instead of
+`2px`. Nothing warns you.
+
+If your project was initialised before that line existed, add it. The theme
+alone does not need it.
+
 You do **not** need to remove your existing components, or your existing
 colours, or anything else. Minima is additive.
 
@@ -80,11 +93,22 @@ Rather than fight it, Minima anchors it: `--radius` points at the control rung,
 which puts shadcn's `0.6x` and `1x` steps exactly on the mark and control
 rungs — the two its own components actually use.
 
+Measured in a fresh `create-next-app` + `shadcn init -b base -p nova`:
+
 ```
-rounded-sm    6px   = mark rung      (checkboxes)
-rounded-lg   10px   = control rung   (buttons, inputs)
-rounded-xl   14px                    (Minima's panel rung is 12px)
+rounded-sm    6px   = mark rung      (checkboxes)         ← exact
+rounded-md    8px
+rounded-lg   10px   = control rung   (buttons, inputs)    ← exact
+rounded-xl   14px                    (panel rung is 12px)
+rounded-2xl  18px
+rounded-3xl  22px
+rounded-4xl  26px                    (chip rung is a pill)
 ```
+
+The two shadcn's own components reach for land on a rung exactly; the other
+five are shadcn's numbers. `npm run audit:install` prints that ladder on every
+run, so if shadcn changes its ratios this page stops being right out loud
+rather than quietly.
 
 If you want every rung exact, delete the seven `--radius-*` lines from the
 `@theme inline` block in your `globals.css`. Minima defines them, and with
@@ -166,6 +190,37 @@ article treatment:
 You get a 68-character measure, vertical rhythm from the line height rather
 than the layout ladder, and a body set slightly lighter than headings so
 emphasis has somewhere to go.
+
+Prose is a set of **defaults**, so a utility on any element inside it wins:
+
+```html
+<article class="prose">
+  <h2 class="text-blue-solid">…</h2>   <!-- blue, not the heading colour -->
+  <p class="mt-0">…</p>                <!-- 0, not the flow rhythm -->
+  <code class="bg-transparent">…</code><!-- transparent, not the tint -->
+</article>
+```
+
+That is not free — it is why the whole file sits in `@layer components`.
+Unlayered CSS outranks every Tailwind layer, so before this it did the
+opposite: the class was in the markup and the cascade ignored it.
+
+## Density
+
+Three modes, set with one attribute **on the root element**:
+
+```html
+<html data-density="compact">    <!-- or "comfortable"; default is neither -->
+```
+
+It scales the four spacing rungs. Control heights deliberately do *not* shrink:
+the default ladder already sits on the 24px floor WCAG 2.2 SC 2.5.8 puts under a
+pointer target, so there is nowhere below it to go, and an accessibility floor
+does not get a preference toggle.
+
+The selector is `:root[data-density=…]`, so this is a whole-document setting.
+Putting the attribute on a `<div>` does nothing — a dense region inside a
+comfortable page is not something the system currently expresses.
 
 ## Overriding things
 

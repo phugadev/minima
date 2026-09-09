@@ -89,9 +89,19 @@ const browser = await chromium.launch()
     await matrix.click()
     await page.waitForSelector("[data-probe]")
   }
-  /* The theme is applied in an effect, and --focus lives behind it. Tabbing
-     before that lands measures the fallback, not the ring. */
-  await page.waitForFunction(() => document.documentElement.hasAttribute("data-theme"))
+  /* Wait for --focus to RESOLVE, not for the lab's data-theme attribute.
+
+     The attribute is how the lab A/Bs the theme, and it applies in an effect —
+     tabbing before that lands measures the fallback rather than the ring. But
+     a real install has no such attribute and never will, so waiting on it hung
+     this runner forever against the one thing the header claims it is for:
+     "point it at any project that has installed the theme". Waiting on the
+     token instead is true in both. */
+  await page.waitForFunction(
+    () => getComputedStyle(document.documentElement).getPropertyValue("--focus").trim() !== "",
+    null,
+    { timeout: 10000 }
+  )
   const seen = []
   for (let i = 0; i < 80; i++) {
     await page.keyboard.press("Tab")

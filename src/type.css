@@ -188,15 +188,24 @@
 @layer components {
   /* The registers themselves. A size utility says how big; these say which
      voice, and they are deliberately separate so `type-label` can be used
-     without `.signal` when something wants the metrics but not the case. */
+     without `.signal` when something wants the metrics but not the case.
+
+     The fallback stack on --font-mono is not decoration. Minima does not ship
+     a typeface — it borrows Tailwind's --font-mono — and shadcn's own @theme
+     re-points that at --font-geist-mono, which only exists if the app wired
+     up next/font. An unresolved font-family is invalid at computed-value time,
+     so it INHERITS: the figure register would quietly become the reading one,
+     digits would stop aligning, and the file above claims that alignment is
+     the reason the register exists at all. A named fallback keeps the claim
+     true when the variable is missing. */
   .signal {
-    font-family: var(--font-mono);
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
     text-transform: uppercase;
     font-variant-numeric: tabular-nums;
   }
 
   .figure {
-    font-family: var(--font-mono);
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.01em;
   }

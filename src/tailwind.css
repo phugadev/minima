@@ -4,9 +4,11 @@
 
    Minima re-points Tailwind's OWN scales at its rungs rather than adding a
    parallel set of names, and that is what lets an UNTOUCHED shadcn component
-   pick the system up. A card asking for `rounded-xl` and `shadow-sm` gets the
-   panel radius and the raised shadow without being edited; `ease-out` gets
-   Minima's curve. Nothing here requires a component change.
+   pick the system up. A card asking for `shadow-sm` gets the raised shadow
+   without being edited; `ease-out` gets Minima's curve. Nothing here requires
+   a component change.
+
+   Radius is the exception, and the block at the bottom of this file says so.
 
    The document is deliberately left alone. Minima adds tokens and re-points
    scales — it does not set your body background or your typeface. The only
@@ -50,8 +52,24 @@
   --radius-control-sm: var(--rung-control-sm, var(--rung-control));
   --radius-control-md: var(--rung-control-md, var(--rung-control));
   --radius-control-lg: var(--rung-control-lg, var(--rung-control));
-  /* shadcn's own scale, re-pointed at the same rungs so stock components
-     inherit the geometry without being edited. */
+  /* shadcn's own scale, re-pointed at the same rungs.
+
+     These seven lines only take effect in a project that has NOT run
+     `shadcn init`. In one that has, its own `@theme` re-derives all seven from
+     `--radius` with fixed ratios, and it always comes after this file — CSS
+     puts every `@import` at the top, so there is no import position that wins.
+     Measured in a fresh install: sm 6, md 8, lg 10, xl 14, 2xl 18, 3xl 22,
+     4xl 26.
+
+     Two of those land on a rung anyway, because `--radius` is anchored on the
+     control rung in semantic.css: sm at 0.6x is the mark rung exactly, lg at
+     1x is the control rung exactly, and those are the two shadcn's own
+     components reach for. The other five are shadcn's numbers, not Minima's,
+     and docs/install.md says which and how to hand them over.
+
+     They stay declared because the plain-Tailwind case is real and this is the
+     only thing serving it. scripts/audit-install.mjs measures all seven against
+     a real install so the split above is checked rather than remembered. */
   --radius-sm: var(--rung-mark);
   --radius-md: var(--rung-control);
   --radius-lg: var(--rung-control);
