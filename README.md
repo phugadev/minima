@@ -11,6 +11,41 @@ than inventing a parallel set of names. (Radius is the one scale shadcn keeps �
 see [docs/install.md](docs/install.md) for why, and the one-time edit that
 hands it over.)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-minima-dark.png">
+  <img alt="A dashboard rendered with Minima — neutral cards on a quieter page, tinted status chips, mono figures" src="docs/images/dashboard-minima.png">
+</picture>
+
+### The same page, both ways
+
+Same markup, same components, same class names. The only thing that changes is
+which values sit behind shadcn's semantic names — which is the whole claim, and
+the reason the theme is one file rather than a component library.
+
+<table>
+<tr>
+<th width="50%">Stock shadcn</th>
+<th width="50%">With Minima</th>
+</tr>
+<tr>
+<td>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-stock-dark.png">
+  <img alt="The same dashboard on stock shadcn: flat cards, monochrome tiles, outlined status chips" src="docs/images/dashboard-stock.png">
+</picture>
+</td>
+<td>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-minima-dark.png">
+  <img alt="The same dashboard with Minima: raised cards, hue-carrying tiles, tinted status chips" src="docs/images/dashboard-minima.png">
+</picture>
+</td>
+</tr>
+</table>
+
+Screens from the development lab, not something Minima ships — it ships tokens
+and five components, and the page above is ordinary shadcn markup using them.
+
 ## Install
 
 ```bash
@@ -48,6 +83,15 @@ theme reaches into a component you own.
 | **Motion** | Four durations, three curves, and reduced motion enforced globally. |
 | **State** | Focus, hover, pressed and disabled, with a ring that clears 3:1 on every surface — on every element that takes focus, `contenteditable` included. |
 | **Syntax** | A code palette generated from the same ramps, for Prism, highlight.js or Shiki. |
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/ramps-dark.png">
+  <img alt="Ten OKLCH ramps of ten steps, gray and nine hues, with each column labelled by the job it does" src="docs/images/ramps.png">
+</picture>
+
+Dark is not an inversion of light. Both ramps are generated against their own
+mode, which is why step 9 is a legible text colour on either and why the two
+sets are not mirror images of each other.
 
 ## A few of the decisions
 
