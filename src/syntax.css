@@ -1,0 +1,175 @@
+/* ---------------------------------------------------------------------------
+   Syntax
+   ---------------------------------------------------------------------------
+
+   A code block is the last unowned colour surface in the system. Shiki, Prism
+   and highlight.js all ship their own themes — github-dark, dracula, nord —
+   each with its own greens and blues, and dropping one in makes the code block
+   the single place in an app that uses somebody else's palette. That is the
+   same shape of gap `color-scheme` was: a surface we do not draw, invisible to
+   every runner, and on a technical blog it is half the page.
+
+   ── Why colour is allowed here at all ─────────────────────────────────────
+
+   The system's rule is that colour is spent on state, identity and data, and
+   syntax highlighting looks like the fourth thing — colour as category, which
+   docs/colour-roles.md calls decoration. It is not. In code the category IS
+   the meaning: the colour is a rendering of the parse, so it is carrying
+   information the reader cannot otherwise see. Highlighting is data
+   visualisation, and it belongs in the data bucket.
+
+   That is also the argument for restraint. Four hues, not nine.
+
+   ── Tone carries structure, hue carries values ───────────────────────────
+
+   The obvious mapping is keyword=purple, function=blue, string=green,
+   number=amber. It is what nearly every theme does, it is perfectly readable,
+   and it is not ours — it is VS Code Light+ with our hexes in it.
+
+   So this follows the system's own rule instead. Colour is spent on state,
+   identity and data; in code, the DATA is the literals — the string and the
+   number, the two tokens whose content is not code. Everything else is
+   structure, and structure is ranked by TONE:
+
+     keyword       foreground, weight 600   the strongest thing on the line
+     function      foreground               things that are called
+     name          reading gray             variables and properties — names
+                                            YOU chose, and the most common
+                                            token in any file
+     punctuation   muted                    structure you parse without reading
+     comment       muted, italic            prose inside code
+
+     string        green                    a value
+     number        amber                    a value
+
+   Four levels of neutral plus two hues. It is a strong opinion and it is
+   deliberately reversible: the mapping is nothing but which ramp token each
+   role points at, so the conventional version is a seven-line edit here and
+   the runners hold either way.
+
+   The two hues sit 72 degrees apart, well past the 25-degree floor the palette
+   was pruned to.
+
+   All of them sit on the TEXT rung, which is the step built to be legible
+   against a background — and the background here is the code block's tint,
+   not the page, so the audit measures them there.
+--------------------------------------------------------------------------- */
+
+:root[data-theme="minima"] {
+  --syntax-comment: var(--gray-text);
+  --syntax-punctuation: var(--gray-text);
+  --syntax-name: var(--gray-reading);
+  --syntax-keyword: var(--foreground);
+  --syntax-function: var(--foreground);
+  --syntax-string: var(--green-text);
+  --syntax-number: var(--amber-text);
+
+  /* The ground a highlighted line sits on. A tint, so a highlight reads on the
+     block whether the block is on the page or on a card, and so it does not
+     bury the syntax colours sitting on top of it. */
+  --syntax-highlight: var(--blue-tint-subtle);
+  --syntax-gutter: var(--muted-foreground);
+}
+
+@theme inline {
+  --color-syntax-comment: var(--syntax-comment);
+  --color-syntax-punctuation: var(--syntax-punctuation);
+  --color-syntax-name: var(--syntax-name);
+  --color-syntax-keyword: var(--syntax-keyword);
+  --color-syntax-function: var(--syntax-function);
+  --color-syntax-string: var(--syntax-string);
+  --color-syntax-number: var(--syntax-number);
+  --color-syntax-highlight: var(--syntax-highlight);
+}
+
+/* ── Highlighter bindings ───────────────────────────────────────────────────
+
+   Class-based highlighters (Prism, highlight.js) get mapped here. Shiki emits
+   inline styles instead, so it takes the generated theme in
+   app/syntax-light.json / syntax-dark.json — same tokens, different delivery.
+
+   Scoped under .prose so a code sample inside interface chrome is not silently
+   restyled, matching how the rest of prose behaves. */
+@layer components {
+  .prose :is(pre, code) :is(.token, [class*="hljs-"]) {
+    color: var(--syntax-name);
+  }
+
+  .prose :is(.token.comment, .token.prolog, .token.cdata, .hljs-comment, .hljs-quote) {
+    color: var(--syntax-comment);
+    font-style: italic;
+  }
+
+  .prose :is(.token.punctuation, .token.operator, .hljs-punctuation, .hljs-operator) {
+    color: var(--syntax-punctuation);
+  }
+
+  .prose
+    :is(
+      .token.keyword,
+      .token.rule,
+      .token.important,
+      .token.atrule,
+      .token.class-name,
+      .token.builtin,
+      .hljs-keyword,
+      .hljs-type,
+      .hljs-title.class_,
+      .hljs-built_in
+    ) {
+    color: var(--syntax-keyword);
+    font-weight: 600;
+  }
+
+  .prose :is(.token.function, .token.selector, .hljs-title, .hljs-title.function_, .hljs-section) {
+    color: var(--syntax-function);
+  }
+
+  .prose
+    :is(
+      .token.string,
+      .token.char,
+      .token.attr-value,
+      .token.regex,
+      .hljs-string,
+      .hljs-regexp,
+      .hljs-attr
+    ) {
+    color: var(--syntax-string);
+  }
+
+  .prose
+    :is(
+      .token.number,
+      .token.boolean,
+      .token.constant,
+      .token.symbol,
+      .hljs-number,
+      .hljs-literal
+    ) {
+    color: var(--syntax-number);
+  }
+
+  /* A highlighted line spans the block's full width, so it has to be applied
+     to a row that already stretches — hence the negative inset rather than a
+     background on the token itself. */
+  .prose pre .line-highlight,
+  .prose pre [data-highlighted-line] {
+    background-color: var(--syntax-highlight);
+    box-shadow: inset 2px 0 0 0 var(--syntax-function);
+    margin-inline: calc(var(--space-gutter) * -1);
+    padding-inline: var(--space-gutter);
+  }
+
+  /* Line numbers must never end up in the clipboard. */
+  .prose pre [data-line-number]::before {
+    content: attr(data-line-number);
+    display: inline-block;
+    width: 2ch;
+    margin-right: 1.5ch;
+    text-align: right;
+    color: var(--syntax-gutter);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}

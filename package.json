@@ -1,0 +1,19 @@
+{
+  "name": "minima",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ramps": "node scripts/build-ramps.mjs",
+    "syntax": "node scripts/build-syntax.mjs",
+    "theme": "node scripts/build-theme.mjs",
+    "build": "npm run ramps && npm run syntax && npm run theme",
+    "audit": "node scripts/audit-ramps.mjs && node scripts/audit-alpha.mjs && node scripts/audit-depth.mjs && node scripts/audit-motion.mjs && node scripts/audit-state.mjs && node scripts/audit-prose.mjs && node scripts/audit-native.mjs && node scripts/audit-syntax.mjs && node scripts/audit-components.mjs && node scripts/audit-merge.mjs && node scripts/audit-registry.mjs",
+    "audit:upstream": "node scripts/audit-upstream.mjs",
+    "sync:upstream": "node scripts/audit-upstream.mjs --sync",
+    "audit:live": "node scripts/audit-live.mjs"
+  },
+  "devDependencies": {
+    "cn": "^0.2.5",
+    "playwright": "^1.49.0"
+  }
+}

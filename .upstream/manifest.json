@@ -1,0 +1,15 @@
+{
+  "style": "base-nova",
+  "recorded": "2026-09-08T00:54:41.477Z",
+  "components": {
+    "button": {
+      "lines": 58
+    },
+    "tabs": {
+      "lines": 82
+    },
+    "input": {
+      "lines": 20
+    }
+  }
+}

@@ -1,0 +1,84 @@
+/* ---------------------------------------------------------------------------
+   State
+   ---------------------------------------------------------------------------
+
+   What a control does when you touch it. Five states, and none of them
+   introduces a new idea — each one is a move along a ladder that already
+   exists, which is the point. A design system earns its keep when the answer
+   to a new question turns out to be made of the old answers.
+
+     rest       the control's own rung.
+     hover      one TINT rung up. A veil, never a replacement — the row
+                underneath might be striped, selected, or an image.
+     pressed    one DEPTH rung down, one tint rung up, and 1px toward the
+                page. Pressing something moves it closer to the surface, so
+                the shadow shrinks; that is what makes a press feel physical
+                rather than merely coloured.
+     focus      a ring, described below.
+     disabled   no depth and no response. Not "greyed out" — INERT.
+
+   ── Focus is the one that cannot be got wrong ─────────────────────────────
+
+   Everything else here is craft. This one has a person behind it: someone
+   navigating by keyboard has no pointer to tell them where they are, and a
+   focus ring that fails is not a rough edge, it is a wall.
+
+   The ring is a solid outline in the identity colour, held OFF the control by
+   an offset. The offset is not decoration — it is what makes the ring work on
+   any surface. A ring drawn flush against a control has to contrast with the
+   control; a ring held two pixels off it contrasts with the gap, and the gap
+   is whatever the control is sitting on. That is why a blue ring survives
+   being drawn around a blue button.
+
+   `outline` rather than `box-shadow` or a border, for three reasons: it does
+   not affect layout, it follows the border radius, and it is the one property
+   Windows High Contrast Mode preserves. A focus ring built from box-shadow
+   disappears entirely for the users most likely to need it.
+
+   Declared with :where() so it carries zero specificity — a component that
+   wants a different ring simply writes one, with no !important arms race.
+--------------------------------------------------------------------------- */
+
+:root {
+  --focus-width: 2px;
+  --focus-offset: 2px;
+}
+
+@theme inline {
+  --color-focus: var(--focus);
+}
+
+@layer base {
+  /* The ring's COLOUR is set at rest, before anything is focused.
+     Controls carry `transition-all`, and that includes outline-color — so
+     without this the ring animates in from currentColor and visibly flashes
+     grey before turning blue. A focus ring is a switch, not a transition:
+     someone tabbing quickly would see a trail of grey rings and never the real
+     one. Only outline-style and width change on focus, and neither animates,
+     so the ring now appears at full strength on the frame it is asked for.
+
+     It is also why the first version of this measured wrong — the audit read
+     the outline the instant after Tab and caught the transition's first frame,
+     which is exactly what a person tabbing fast would see. */
+  :where(a, button, input, select, textarea, summary, [tabindex]) {
+    outline-color: var(--focus, currentColor);
+  }
+
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    /* The fallback is load-bearing. --focus resolves through the theme's
+       ramp, and an undefined colour makes the whole outline declaration
+       invalid — CSS drops it silently and the control gets NO RING, which
+       is the worst possible failure for the one rule with a person behind
+       it. currentColor is always defined and always visible. */
+    outline: var(--focus-width) solid var(--focus, currentColor);
+    outline-offset: var(--focus-offset);
+  }
+
+  /* A control that is not offering anything should not look like it is
+     hovering, lifting, or waiting. Depth is an affordance; take it away. */
+  :where(button, [role="button"], a, input, select, textarea):disabled,
+  :where(button, [role="button"], a, input, select, textarea)[aria-disabled="true"],
+  :where([data-disabled]) {
+    box-shadow: none;
+  }
+}

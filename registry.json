@@ -1,0 +1,139 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "minima",
+  "homepage": "https://github.com/phugadev/minima",
+  "items": [
+    {
+      "name": "theme",
+      "type": "registry:file",
+      "title": "Minima theme",
+      "description": "The whole design system as one CSS file: OKLCH ramps, alpha rungs, type, space, depth, motion, state, prose and syntax. Import it once after Tailwind and existing shadcn components pick it up unedited.",
+      "files": [
+        {
+          "path": "registry/minima.css",
+          "type": "registry:file",
+          "target": "~/styles/minima.css"
+        }
+      ]
+    },
+    {
+      "name": "syntax-shiki",
+      "type": "registry:file",
+      "title": "Minima syntax themes (Shiki)",
+      "description": "Shiki themes generated from the same ramps as the CSS. Only needed if you highlight with Shiki; Prism and highlight.js are bound by class in the theme file itself.",
+      "registryDependencies": [
+        "phugadev/minima/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/syntax-light.json",
+          "type": "registry:file",
+          "target": "~/styles/minima-syntax-light.json"
+        },
+        {
+          "path": "registry/syntax-dark.json",
+          "type": "registry:file",
+          "target": "~/styles/minima-syntax-dark.json"
+        }
+      ]
+    },
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "title": "Button",
+      "description": "shadcn's button with every size and variant expressed in Minima tokens: control heights that follow density, radius that tracks height, and a destructive variant on an audited fill-and-text pairing.",
+      "dependencies": [
+        "@base-ui/react",
+        "class-variance-authority",
+        "cn"
+      ],
+      "registryDependencies": [
+        "phugadev/minima/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/button.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "input",
+      "type": "registry:ui",
+      "title": "Input",
+      "description": "shadcn's input on Minima control heights, with a field text size that clears the 16px floor mobile Safari zooms below.",
+      "dependencies": [
+        "@base-ui/react",
+        "cn"
+      ],
+      "registryDependencies": [
+        "phugadev/minima/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/input.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "tabs",
+      "type": "registry:ui",
+      "title": "Tabs",
+      "description": "shadcn's tabs with the grey-on-grey track replaced: the list is a recessed track and the active tab is a raised surface, so the selection reads in both modes.",
+      "dependencies": [
+        "@base-ui/react",
+        "class-variance-authority",
+        "cn"
+      ],
+      "registryDependencies": [
+        "phugadev/minima/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/tabs.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "stat",
+      "type": "registry:ui",
+      "title": "Stat",
+      "description": "A single measurement with an optional delta. Uses the figure register so digits align down a column, and treats tone as a state rather than a category.",
+      "dependencies": [
+        "class-variance-authority",
+        "cn",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "phugadev/minima/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/stat.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "status",
+      "type": "registry:ui",
+      "title": "Status",
+      "description": "A state as a chip: tinted ground, border, dot and label drawn from one hue at four different rungs.",
+      "dependencies": [
+        "class-variance-authority",
+        "cn"
+      ],
+      "registryDependencies": [
+        "phugadev/minima/theme"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/status.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    }
+  ]
+}

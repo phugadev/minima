@@ -1,0 +1,177 @@
+/* ---------------------------------------------------------------------------
+   Motion
+   ---------------------------------------------------------------------------
+
+   Motion in an interface is not decoration and it is not delight. Its one job
+   is CONTINUITY: showing that the thing you are now looking at is the same
+   thing you were looking at a moment ago, moved. Every rule below follows from
+   that, and anything that does not serve it is an animation, not motion.
+
+   Unlike colour, type, space and depth, motion is global rather than themed.
+   Tailwind's easing keys are not scopeable, and more to the point a curve is
+   not a matter of taste in the way a hue is — it is a claim about physics.
+
+   ── Duration ──────────────────────────────────────────────────────────────
+
+     instant   0ms     a switch. A checkbox, a tab, a radio. Animating a state
+                       that is genuinely binary does not read as smooth, it
+                       reads as laggy — the interface hesitating before it
+                       agrees with you.
+     quick   120ms     a local change in place: hover, colour, a small fade.
+     base    180ms     something arriving: a menu, a popover, a tooltip.
+     slow    260ms     something bigger arriving further: a dialog, a sheet.
+
+   The ladder pairs with the depth rungs, and for the same reason the depth
+   rungs exist — duration should scale with how far a thing travels. A menu
+   comes from just above its trigger. A dialog comes from somewhere else
+   entirely.
+
+   Nothing goes past 260ms. Above roughly 400ms a UI transition stops reading
+   as motion and starts reading as latency, and the user begins waiting for the
+   interface instead of using it.
+
+   ── Exits are faster than entrances ───────────────────────────────────────
+
+   Roughly 0.7x, and this is the rule most systems miss. An entrance is
+   information: something new arrived and you have to find it. An exit is not —
+   you already decided, you already know what is leaving, and every millisecond
+   spent watching it go is friction between you and the next thing. Symmetric
+   timing feels correct in a spec and sluggish in the hand.
+
+   ── Easing ────────────────────────────────────────────────────────────────
+
+   The curve says where the energy is, so it has to match the job:
+
+     out      decelerates. Things ARRIVING — they come in fast and settle.
+     in       accelerates. Things LEAVING — they gather speed and are gone.
+     in-out   both. Things MOVING between two positions you can see.
+
+   Using `in` for an entrance is the single most common motion bug: the object
+   creeps, then arrives at speed, which reads as a stutter.
+
+   But "accelerates" is not enough on its own, and getting this wrong is what
+   made the first version of the menu demo feel sluggish. The exit curve was
+   cubic-bezier(0.7, 0, 0.84, 0) — a genuine acceleration curve, and one that
+   is only 2.8% DONE at the halfway point. The menu sat there for 65ms of its
+   130ms doing visibly nothing, then vanished. Correct by the definition,
+   sluggish in the hand.
+
+   So a curve is judged two ways: which side of the diagonal it sits on, and
+   how much DEAD TIME it has at the front. Nothing may spend half its duration
+   doing less than 15% of the work. Expo-in is for dramatic motion; an
+   interface exit wants to start leaving the instant you ask it to.
+
+   ── `in` is for things that TRAVEL away ───────────────────────────────────
+
+   And there is a second half to that, found the same way. Even a well-behaved
+   accelerate curve reads as sluggish on something that fades in place, and the
+   menu demo proved it: 180ms in on `out` (97% done at halfway, so it reads as
+   ~90ms) against 130ms out on `in` (24% at halfway, so it reads as the full
+   130). The label said the exit was faster. The eye said the opposite, and the
+   eye was right.
+
+   The reason is that "leaving accelerates" is a fact about OBJECTS IN MOTION.
+   A sheet sliding off the edge, a toast flying out — those genuinely gather
+   speed as they go, and starting slow looks like the beginning of a journey.
+   A popover that fades and scales at its anchor is not going anywhere. There
+   is no journey for the slow start to be the beginning of, so it just looks
+   like the interface thinking about it.
+
+     travels off-screen      ease-in on exit
+     fades / scales in place ease-out BOTH ways, shorter on the way out
+
+   Nearly everything in an interface is the second case.
+
+   ── Only transform and opacity ────────────────────────────────────────────
+
+   Those two are the only properties a browser can animate without recomputing
+   layout or repainting on every frame. Transitioning width, height, top or
+   margin will run — and it will drop frames on exactly the low-end hardware
+   where smoothness matters most. If something must appear to change size, use
+   a scale transform.
+--------------------------------------------------------------------------- */
+
+:root {
+  --motion-instant: 0ms;
+  --motion-quick: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 260ms;
+
+  /* ~0.7x their entrances. See above. */
+  --motion-base-exit: 130ms;
+  --motion-slow-exit: 180ms;
+}
+
+@theme inline {
+  /* Tailwind's three built-in easing keys, re-pointed — the same move the
+     radius and depth rungs make, so `ease-out` on a stock shadcn component
+     picks up Minima's curve without the component being edited. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 0.9, 0.6);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Tailwind v4 has no theme namespace for named durations — `duration-*` takes
+   a bare number — so the rungs are declared as utilities instead. */
+@utility duration-instant {
+  transition-duration: var(--motion-instant);
+  animation-duration: var(--motion-instant);
+}
+@utility duration-quick {
+  transition-duration: var(--motion-quick);
+  animation-duration: var(--motion-quick);
+}
+@utility duration-base {
+  transition-duration: var(--motion-base);
+  animation-duration: var(--motion-base);
+}
+@utility duration-slow {
+  transition-duration: var(--motion-slow);
+  animation-duration: var(--motion-slow);
+}
+@utility duration-base-exit {
+  transition-duration: var(--motion-base-exit);
+  animation-duration: var(--motion-base-exit);
+}
+@utility duration-slow-exit {
+  transition-duration: var(--motion-slow-exit);
+  animation-duration: var(--motion-slow-exit);
+}
+
+/* ── Reduced motion ─────────────────────────────────────────────────────────
+
+   The one part of motion that is not a matter of judgement. For some people
+   this is not a preference about polish, it is the difference between using
+   the interface and feeling ill, so it is enforced globally rather than left
+   to each component to remember.
+
+   Blanket, because it has to cover Tailwind's own duration utilities and
+   tw-animate-css keyframes as well as the tokens above — anything a component
+   might reach for, including ones not written yet.
+
+   1ms rather than 0ms on purpose: a zero-length transition can skip firing
+   transitionend in some engines, and code that waits for that event to clean
+   up would hang. The motion is gone either way; this way nothing breaks.
+
+   Note what this does NOT do: it removes motion, not feedback. A control that
+   only signals its state by animating is broken here, and was already broken
+   for anyone who cannot perceive the animation. State needs a colour, a mark
+   or a label as well. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-quick: 1ms;
+    --motion-base: 1ms;
+    --motion-slow: 1ms;
+    --motion-base-exit: 1ms;
+    --motion-slow-exit: 1ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

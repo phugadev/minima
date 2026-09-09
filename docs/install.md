@@ -1,0 +1,182 @@
+# Installing Minima
+
+Zero to working, in two steps. The rest of this page is what those two steps
+do, what you get, and what it looks like when something has gone wrong.
+
+## Before you start
+
+Minima needs three things, and it is worth checking rather than discovering:
+
+**Tailwind v4.** The theme is written in v4 syntax — `@theme`, `@utility`,
+`@layer` — and will not do anything under v3. If your project has a
+`tailwind.config.js` and no `@import "tailwindcss"`, you are on v3.
+
+**shadcn initialised.** You need a `components.json`, because that is how the
+CLI knows where your project root is and where components belong.
+
+```bash
+npx shadcn@latest init
+```
+
+**A `.dark` class on `<html>` for dark mode.** Minima keys dark mode off the
+same class shadcn and `next-themes` use. If you already have a theme toggle,
+it already works.
+
+You do **not** need to remove your existing components, or your existing
+colours, or anything else. Minima is additive.
+
+## Step 1 — add the theme
+
+```bash
+npx shadcn@latest add phugadev/minima/theme
+```
+
+One file lands at `styles/minima.css`. It is the whole design system: the
+OKLCH ramps, the alpha rungs, type, space, depth, motion, state, prose and
+syntax. Roughly 2,300 lines, and every value in it is checked by a runner
+before it ships.
+
+## Step 2 — one import line
+
+In your global stylesheet — `app/globals.css` in a Next.js app — add the
+import directly under Tailwind's:
+
+```css
+@import "tailwindcss";
+@import "../styles/minima.css";
+```
+
+**Order matters, and it may look wrong.** CSS requires every `@import` to sit
+at the top of the file, which puts Minima *above* the `:root` block that
+`shadcn init` wrote. Normally that would mean shadcn wins the tie and Minima
+does nothing at all.
+
+It does not, because the layer that redefines shadcn's names is emitted as
+`:root:root` — the same element at one more point of specificity, which beats a
+later `:root` regardless of source order. You do not have to move anything,
+reorder anything, or delete anything.
+
+That is the whole installation.
+
+## What you get immediately
+
+Reload and the app should already look different, **without a single component
+being edited.** Minima re-points Tailwind's own scales rather than adding a
+parallel set of names, so:
+
+- a card asking for `rounded-xl` gets the panel radius
+- `shadow-sm` gets the raised shadow — a real two-layer cast shadow
+- `ease-out` gets Minima's curve
+- `bg-card`, `border-border`, `text-muted-foreground` and the rest of shadcn's
+  eighteen names resolve to the ramps
+
+Three things you get that are not cosmetic:
+
+- **Scrollbars and native controls follow the theme**, because `color-scheme`
+  is declared. Without it a dark app keeps light scrollbars.
+- **Every focusable control gets a ring** that clears 3:1 on every surface it
+  can sit on, held off the control by an offset so it works on any background.
+- **`prefers-reduced-motion` is honoured globally**, including for Tailwind's
+  own duration utilities and any keyframes you have.
+
+## Optional — take the components
+
+The theme does not touch components you own. Some of shadcn's have decisions
+baked into the file rather than into tokens, and those are shipped separately:
+
+```bash
+npx shadcn@latest add phugadev/minima/button
+npx shadcn@latest add phugadev/minima/input
+npx shadcn@latest add phugadev/minima/tabs
+```
+
+They overwrite the equivalent file in `components/ui`. Each is shadcn's
+component with its literals replaced by tokens — control heights that follow
+density, radius that tracks height, and in the case of `tabs` a selected state
+that reads in dark mode, which the stock grey-on-grey track does not.
+
+Two components have no shadcn equivalent:
+
+```bash
+npx shadcn@latest add phugadev/minima/stat     # a measurement with a delta
+npx shadcn@latest add phugadev/minima/status   # a state, as a chip
+```
+
+Each declares `phugadev/minima/theme` as a dependency, so adding a component
+first will pull the theme in for you.
+
+## Optional — syntax highlighting
+
+Prism and highlight.js need nothing: the theme binds their class names already.
+Write `<pre><code>` inside a `.prose` container and it is styled.
+
+Shiki emits inline styles at build time rather than classes, so it needs a
+theme file:
+
+```bash
+npx shadcn@latest add phugadev/minima/syntax-shiki
+```
+
+```ts
+import light from "@/styles/minima-syntax-light.json"
+import dark from "@/styles/minima-syntax-dark.json"
+```
+
+## Using prose
+
+Prose is a mode you opt into, so a `<code>` in a table cell is not given
+article treatment:
+
+```html
+<article class="prose">…</article>
+```
+
+You get a 68-character measure, vertical rhythm from the line height rather
+than the layout ladder, and a body set slightly lighter than headings so
+emphasis has somewhere to go.
+
+## Overriding things
+
+Minima's own tokens — ramps, spacing, depth, type — sit at plain `:root`, so a
+declaration in your own stylesheet after the import wins normally:
+
+```css
+:root {
+  --rung-panel: 1rem;   /* squarer cards */
+  --measure: 76ch;      /* longer prose lines */
+}
+```
+
+The eighteen shadcn names are the exception, because those are the ones sitting
+at `:root:root` to beat shadcn's defaults. Match that specificity:
+
+```css
+:root:root {
+  --primary: var(--blue-solid);
+}
+```
+
+Or edit `styles/minima.css` directly. It is in your repo and it is yours — but
+it is generated, so a reinstall will overwrite it.
+
+## When it looks like nothing happened
+
+**Everything renders in Times.** shadcn's `@theme` maps `--font-sans` to itself
+and nothing defines it. Set it to your actual font variable.
+
+**Colours did not change.** Check the import is *below* `@import "tailwindcss"`
+and that the path is right. If `styles/minima.css` does not exist, step 1 did
+not complete.
+
+**Utilities like `type-body` or `h-control-md` do nothing.** Tailwind only
+generates a utility it can see used in your source. If you are testing from a
+console, it will not exist yet.
+
+**Type is the wrong size.** Minima's type scale is `type-*`, not `text-*` —
+`type-body`, `type-caption`, `type-label`. This is deliberate: `cn()` carries a
+hardcoded list of font sizes, so a custom `text-body` gets filed as a colour,
+collides with `text-muted-foreground`, and is silently dropped. `text-*` stays
+for colours only.
+
+**Dark mode looks light.** Minima needs `.dark` on `<html>`, not on a wrapper
+element.

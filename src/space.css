@@ -1,0 +1,86 @@
+/* ---------------------------------------------------------------------------
+   Space
+   ---------------------------------------------------------------------------
+
+   Four rungs, each twice the one below it:
+
+     inset     8px    padding inside a control
+     gutter   16px    gap between things in the same group
+     stack    32px    gap between groups
+     section  64px    gap between regions of a page
+
+   The doubling is the whole rule, and it comes from how grouping is actually
+   perceived: things closer together read as belonging together. A gap that is
+   merely a bit larger than the one inside a group reads as noise — the eye
+   cannot tell whether it is separation or sloppiness. At 2x it is unambiguous.
+
+   So the ladder is not a scale to pick from, it is a question to answer: is
+   this space inside a thing, between things, between groups, or between
+   regions? There are only four answers.
+
+   Density scales all four and every control height together, and the doubling
+   survives in each mode — that is the constraint the numbers are chosen under,
+   not a coincidence. One attribute on the root moves the whole interface.
+--------------------------------------------------------------------------- */
+
+:root {
+  --space-inset: 0.5rem;
+  --space-gutter: 1rem;
+  --space-stack: 2rem;
+  --space-section: 4rem;
+
+  /* Controls are sized, not padded. A button's height is a system decision so
+     that a row of mixed controls lines up; its padding is a component one. */
+  --control-xs: 1.5rem;
+  --control-sm: 1.75rem;
+  --control-md: 2rem;
+  --control-lg: 2.25rem;
+}
+
+:root[data-density="compact"] {
+  --space-inset: 0.375rem;
+  --space-gutter: 0.75rem;
+  --space-stack: 1.5rem;
+  --space-section: 3rem;
+
+  /* Controls do NOT shrink with density. 1.25rem is 20px, and WCAG 2.2
+     SC 2.5.8 puts the floor for a pointer target at 24x24 — so compact was
+     shipping an inaccessible button and no runner was looking.
+
+     The default ladder already sits ON that floor at its smallest rung, so
+     there is nowhere below it to go. Compact therefore keeps the default
+     control heights and takes its density entirely from the spacing above,
+     which is where density actually comes from: the same "this mode has run
+     out of room" shape as light-mode surfaces and dark-mode shadows.
+
+     An accessibility floor is not a preference, so it does not get a
+     preference toggle. */
+  --control-xs: 1.5rem;
+  --control-sm: 1.75rem;
+  --control-md: 2rem;
+  --control-lg: 2.25rem;
+}
+
+:root[data-density="comfortable"] {
+  --space-inset: 0.625rem;
+  --space-gutter: 1.25rem;
+  --space-stack: 2.5rem;
+  --space-section: 5rem;
+
+  --control-xs: 1.75rem;
+  --control-sm: 2rem;
+  --control-md: 2.25rem;
+  --control-lg: 2.5rem;
+}
+
+@theme inline {
+  --spacing-inset: var(--space-inset);
+  --spacing-gutter: var(--space-gutter);
+  --spacing-stack: var(--space-stack);
+  --spacing-section: var(--space-section);
+
+  --spacing-control-xs: var(--control-xs);
+  --spacing-control-sm: var(--control-sm);
+  --spacing-control-md: var(--control-md);
+  --spacing-control-lg: var(--control-lg);
+}

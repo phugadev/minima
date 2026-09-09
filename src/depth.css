@@ -1,0 +1,162 @@
+/* ---------------------------------------------------------------------------
+   Depth
+   ---------------------------------------------------------------------------
+
+   Four rungs, and the question they answer is "how far is this from the page":
+
+     flat      part of the page. A table row, a section, an inline panel.
+     raised    sits ON the page and stays put. A card, a sticky header.
+     overlay   floats OVER content and can be dismissed. Menu, popover, tooltip.
+     modal     floats over everything, with a scrim under it. Dialog, sheet.
+
+   The rungs are the same in both modes. What CARRIES them is not, and that is
+   the whole design here rather than an implementation detail.
+
+     light     the shadow does the work. The page is near-white, so a surface
+               cannot get much lighter — raised, overlay and modal all sit on
+               the same white. Depth is read entirely from the shadow.
+
+     dark      the SURFACE does the work. A black shadow on a near-black page
+               has almost nothing to move: the page encodes to 10/255, so even
+               a 50% shadow only reaches 5/255, and the gap between a raised
+               shadow and a modal one is about one 8-bit step. Measurable,
+               barely visible, and useless as a way to encode height.
+
+   So dark mode climbs the gray ramp instead, and its shadow is a single fixed
+   strength that darkens an edge rather than pretending to encode distance.
+   Three alphas there would be fake precision.
+
+   Each mode runs out of room at the opposite end, and both ceilings are real:
+   light cannot go lighter than white, dark cannot go darker than the page.
+   The hairline is what holds the edge in both — see docs/colour-roles.md.
+
+   ── The shadows themselves ────────────────────────────────────────────────
+
+   Two layers each, never one. A single shadow reads as a smudge; the pair is
+   how a real one is built:
+
+     contact   tight, close, the darkest. It is the occlusion right where the
+               object nearly meets the surface, and it is what makes an edge
+               look SEATED rather than pasted on.
+     ambient   wide, soft, light. Sky filling in around the object, and it is
+               what makes the thing look lifted.
+
+   Geometry comes from one height per rung — h = 2, 8, 16 — and is IDENTICAL
+   in both modes, so a theme toggle never changes a component's footprint:
+
+     contact   0  h/2   h     -h/2
+     ambient   0  h     h*2.5 -h/4
+
+   Offset is Y only, because light comes from above. Spread is negative on
+   every layer so the shadow tucks under the object instead of haloing out
+   past its sides. Blur always exceeds offset — the reverse is what a hard
+   drop shadow looks like, and it looks like 2008.
+
+   The shadow is neutral black, not tinted. A cool-tinted shadow is a common
+   quality signal, but it is a correction for a warm ground, and Minima's gray
+   ramp is truly achromatic (C = 0). Adding chroma the palette does not have
+   would be decoration with no reason behind it.
+
+   The CONTACT alpha is constant across rungs; only the ambient grows, in both
+   size and weight. Height is signalled by the pool, not by the edge.
+
+   That is a correction, and worth recording as one. The first version had the
+   contact alpha DECREASE as the rung climbed, which is physically right — a
+   higher object casts a weaker, more diffuse shadow. On screen it made the
+   modal the faintest of the three, because the contact layer is what tells the
+   eye an edge is off the page AT ALL, and weakening it reads as "flatter", not
+   "further". The audit was happy: it measured peak darkening at the contact
+   point (248 -> 228) and that number was true. It was just not the number that
+   decides whether a shadow is visible.
+
+   So: the audit can prove a shadow is well-formed. It cannot prove one is
+   visible. That took looking at it — see docs/depth.md.
+--------------------------------------------------------------------------- */
+
+:root[data-theme="minima"] {
+  /* Light has one surface above the page and then it is out of range. */
+  --surface-raised: var(--gray-bg);
+  --surface-overlay: var(--gray-bg);
+  --surface-modal: var(--gray-bg);
+
+  /* A segmented group — tabs, a toggle — is the one place the page is not the
+     right reference. The selected chip needs to read against the TRACK it sits
+     in, not against the page, so the track recedes and the chip lifts.
+
+     Light recedes: the track drops to gray-4, which is as far as it can go and
+     still carry an inactive label at 4.5:1. Dark cannot recede at all, so the
+     track lifts one step and the chip lifts three. The gap between track and
+     chip is what matters, and it is ~19 points in light and ~16 in dark —
+     close enough that the control reads the same in both. */
+  --control-track: var(--gray-fill-hover);
+  --surface-selected: var(--gray-bg);
+
+  --depth-flat: none;
+  --depth-raised:
+    0 1px 2px -1px rgb(0 0 0 / 0.14),
+    0 2px 6px -1px rgb(0 0 0 / 0.1);
+  --depth-overlay:
+    0 4px 8px -3px rgb(0 0 0 / 0.14),
+    0 10px 24px -4px rgb(0 0 0 / 0.14);
+  --depth-modal:
+    0 8px 16px -6px rgb(0 0 0 / 0.14),
+    0 24px 56px -8px rgb(0 0 0 / 0.2);
+}
+
+:root[data-theme="minima"].dark {
+  /* Dark climbs the ramp, and OVERLAY SITS ABOVE MODAL — which looks like a
+     mistake until you try to open a select inside a dialog. A popover can be
+     anchored to anything, including a dialog; a dialog never opens inside a
+     popover. So the overlay rung is the top of the stack, not the middle, and
+     giving it the same surface as the modal makes that menu dissolve into the
+     dialog it is sitting on.
+
+     This is why depth has two orders rather than one. Surfaces are ordered by
+     WHAT SITS ON WHAT (raised, modal, overlay). Shadows are ordered by
+     APPARENT SIZE (raised, overlay, modal), because a dialog is a bigger
+     object than a menu and casts a bigger shadow whatever it is stacked on. */
+  --surface-raised: var(--gray-bg-subtle);
+  --surface-modal: var(--gray-fill);
+  --surface-overlay: var(--gray-fill-hover);
+
+  --control-track: var(--gray-bg-subtle);
+  --surface-selected: var(--gray-fill-hover);
+
+  /* One strength, three sizes. See the note above on why this is not three
+     strengths. */
+  --depth-flat: none;
+  --depth-raised:
+    0 1px 2px -1px rgb(0 0 0 / 0.45),
+    0 2px 6px -1px rgb(0 0 0 / 0.32);
+  --depth-overlay:
+    0 4px 8px -3px rgb(0 0 0 / 0.45),
+    0 10px 24px -4px rgb(0 0 0 / 0.32);
+  --depth-modal:
+    0 8px 16px -6px rgb(0 0 0 / 0.45),
+    0 24px 56px -8px rgb(0 0 0 / 0.32);
+}
+
+@theme inline {
+  --shadow-flat: var(--depth-flat);
+  --shadow-raised: var(--depth-raised);
+  --shadow-overlay: var(--depth-overlay);
+  --shadow-modal: var(--depth-modal);
+
+  /* Tailwind's own scale, re-pointed at the four rungs — the same move the
+     radius rungs make, so stock shadcn components inherit the depth model
+     without being edited. A component asking for shadow-md gets the overlay
+     rung, which is what it meant. */
+  --shadow-2xs: var(--depth-raised);
+  --shadow-xs: var(--depth-raised);
+  --shadow-sm: var(--depth-raised);
+  --shadow-md: var(--depth-overlay);
+  --shadow-lg: var(--depth-overlay);
+  --shadow-xl: var(--depth-modal);
+  --shadow-2xl: var(--depth-modal);
+
+  --color-control-track: var(--control-track);
+  --color-surface-selected: var(--surface-selected);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-overlay: var(--surface-overlay);
+  --color-surface-modal: var(--surface-modal);
+}

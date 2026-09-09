@@ -1,0 +1,203 @@
+/* ---------------------------------------------------------------------------
+   Type
+   ---------------------------------------------------------------------------
+
+   Three registers, not one scale. The scale answers "how big"; the register
+   answers "what kind of voice", and that is the part that makes an interface
+   recognisable.
+
+     reading   sans, normal case, comfortable leading.
+               Prose, headings, anything a person reads in sentences.
+
+     signal    mono, uppercase, tracked out, small.
+               Text that is SCANNED rather than read — column headers, eyebrows,
+               metadata, state. It is a different job from reading, and giving
+               it a different voice is what stops a dense screen looking like a
+               wall. Never use it for a sentence.
+
+     figure    mono, tabular.
+               Numbers. Tabular so digits align down a column, because a figure
+               is understood by comparing it to the figure above it. This is why
+               the system ships a mono face at all — the register depends on it.
+
+   Sizes are hand-set rather than generated from a ratio. A pure modular scale
+   produces sizes nobody wants (17.6px) and skips ones everybody needs; the
+   steps below are the ones that actually get used, spaced so adjacent steps are
+   distinguishable at a glance.
+--------------------------------------------------------------------------- */
+
+:root {
+  /* ── Reading ───────────────────────────────────────────────────────────
+     Tracking tightens as size grows. Letterforms set for body copy look
+     loose at display sizes, and the correction is optical, not linear. */
+  --type-display: 3rem;
+  --type-display--line-height: 1.05;
+  --type-display--letter-spacing: -0.03em;
+  --type-display--font-weight: 500;
+
+  --type-title: 1.875rem;
+  --type-title--line-height: 1.15;
+  --type-title--letter-spacing: -0.022em;
+  --type-title--font-weight: 500;
+
+  --type-heading: 1.25rem;
+  --type-heading--line-height: 1.3;
+  --type-heading--letter-spacing: -0.015em;
+  --type-heading--font-weight: 500;
+
+  --type-subheading: 1rem;
+  --type-subheading--line-height: 1.4;
+  --type-subheading--letter-spacing: -0.01em;
+  --type-subheading--font-weight: 500;
+
+  /* 14px body. This is an interface, not an article: 16px reads as marketing
+     at these densities, and every control is sized around 14. */
+  --type-body: 0.875rem;
+  --type-body--line-height: 1.6;
+  --type-body--letter-spacing: 0em;
+
+  --type-caption: 0.8125rem;
+  --type-caption--line-height: 1.5;
+  --type-caption--letter-spacing: 0em;
+
+  /* Small controls need a small size that is still READ, not scanned — so it
+     belongs to the reading register with no tracking, rather than borrowing
+     --type-label, which is tracked out for scanning and looks wrong the moment
+     it sits inside a button. */
+  --type-caption-sm: 0.75rem;
+  --type-caption-sm--line-height: 1.35;
+  --type-caption-sm--letter-spacing: 0em;
+
+  /* Text fields, and 1rem is not a preference. Mobile Safari zooms the page
+     when a focused input's text is under 16px, which throws the layout and
+     cannot be dismissed — so a field's size has a floor for the same kind of
+     reason a target does. Desktop drops back to --type-body. */
+  --type-field: 1rem;
+  --type-field--line-height: 1.4;
+  --type-field--letter-spacing: 0em;
+
+  /* ── Signal ────────────────────────────────────────────────────────────
+     Tracking widens as size shrinks — the inverse of the reading register,
+     and for the same optical reason. Uppercase at 10px with normal tracking
+     is a smudge. */
+  --type-label: 0.75rem;
+  --type-label--line-height: 1.2;
+  --type-label--letter-spacing: 0.08em;
+  --type-label--font-weight: 500;
+
+  --type-label-sm: 0.6875rem;
+  --type-label-sm--line-height: 1.2;
+  --type-label-sm--letter-spacing: 0.1em;
+  --type-label-sm--font-weight: 500;
+
+  --type-label-xs: 0.625rem;
+  --type-label-xs--line-height: 1.2;
+  --type-label-xs--letter-spacing: 0.12em;
+  --type-label-xs--font-weight: 500;
+}
+
+
+/* ── Why these are `type-*` and not `text-*` ───────────────────────────────
+
+   Tailwind's --text-* namespace would generate type-display, type-body and so
+   on, which is the obvious naming and is a trap. `cn()` — and tailwind-merge,
+   which the whole ecosystem uses — carries a HARDCODED list of font sizes, so
+   a custom type-body is not recognised as one. It falls through to the
+   text-COLOUR group, collides with text-muted-foreground, and is silently
+   dropped: `cn("type-body font-medium text-muted-foreground")` returns
+   "font-medium text-muted-foreground". No error, no warning, just a paragraph
+   at the wrong size.
+
+   Measured: all eleven sizes broke this way, while radius, shadow, height,
+   size, duration, spacing and colour utilities were all fine — the collision
+   is specific to text-*.
+
+   The fix could have been a configured cn shipped as a lib item, but that only
+   protects consumers who use OUR cn. Renaming the namespace protects everyone,
+   needs no runtime, and cannot regress. It also reads better: `type-body
+   text-muted-foreground` says which is the size and which is the colour, which
+   `type-body text-muted-foreground` never did.
+
+   scripts/audit-merge.mjs runs every Minima utility through cn() so this
+   cannot come back.
+--------------------------------------------------------------------------- */
+
+@utility type-display {
+  font-size: var(--type-display);
+  line-height: var(--type-display--line-height);
+  letter-spacing: var(--type-display--letter-spacing);
+  font-weight: var(--type-display--font-weight);
+}
+@utility type-title {
+  font-size: var(--type-title);
+  line-height: var(--type-title--line-height);
+  letter-spacing: var(--type-title--letter-spacing);
+  font-weight: var(--type-title--font-weight);
+}
+@utility type-heading {
+  font-size: var(--type-heading);
+  line-height: var(--type-heading--line-height);
+  letter-spacing: var(--type-heading--letter-spacing);
+  font-weight: var(--type-heading--font-weight);
+}
+@utility type-subheading {
+  font-size: var(--type-subheading);
+  line-height: var(--type-subheading--line-height);
+  letter-spacing: var(--type-subheading--letter-spacing);
+  font-weight: var(--type-subheading--font-weight);
+}
+@utility type-body {
+  font-size: var(--type-body);
+  line-height: var(--type-body--line-height);
+  letter-spacing: var(--type-body--letter-spacing);
+}
+@utility type-caption {
+  font-size: var(--type-caption);
+  line-height: var(--type-caption--line-height);
+  letter-spacing: var(--type-caption--letter-spacing);
+}
+@utility type-caption-sm {
+  font-size: var(--type-caption-sm);
+  line-height: var(--type-caption-sm--line-height);
+  letter-spacing: var(--type-caption-sm--letter-spacing);
+}
+@utility type-field {
+  font-size: var(--type-field);
+  line-height: var(--type-field--line-height);
+  letter-spacing: var(--type-field--letter-spacing);
+}
+@utility type-label {
+  font-size: var(--type-label);
+  line-height: var(--type-label--line-height);
+  letter-spacing: var(--type-label--letter-spacing);
+  font-weight: var(--type-label--font-weight);
+}
+@utility type-label-sm {
+  font-size: var(--type-label-sm);
+  line-height: var(--type-label-sm--line-height);
+  letter-spacing: var(--type-label-sm--letter-spacing);
+  font-weight: var(--type-label-sm--font-weight);
+}
+@utility type-label-xs {
+  font-size: var(--type-label-xs);
+  line-height: var(--type-label-xs--line-height);
+  letter-spacing: var(--type-label-xs--letter-spacing);
+  font-weight: var(--type-label-xs--font-weight);
+}
+
+@layer components {
+  /* The registers themselves. A size utility says how big; these say which
+     voice, and they are deliberately separate so `type-label` can be used
+     without `.signal` when something wants the metrics but not the case. */
+  .signal {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .figure {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+}

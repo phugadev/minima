@@ -1,0 +1,219 @@
+/* ---------------------------------------------------------------------------
+   Prose
+   ---------------------------------------------------------------------------
+
+   Everything else in this system is for INTERFACE text — labels, values,
+   headings on dense screens, read by scanning. Prose is a different problem.
+   It is read in sentences, continuously, and the things that decide whether it
+   works are not the ones that decide whether a dashboard works:
+
+     measure   how long a line is allowed to get before the eye loses the
+               return sweep and re-reads the line it just finished.
+     rhythm    the vertical spacing between blocks, which comes from the line
+               height rather than from the layout ladder. Prose spacing is
+               typographic; --space-* is architectural. They are not the same
+               ruler and using one for the other is what makes a page of text
+               look like a settings screen.
+     texture   what happens INSIDE a line — code, links, emphasis. The whole
+               job here is to be visible without disturbing the line.
+
+   Scoped to `.prose`, deliberately. Left global, a <code> in a table cell
+   would get article treatment. Prose is a mode you opt into, not a default.
+
+   ── Why the base size changes ─────────────────────────────────────────────
+
+   type.css sets body at 14px and argues for it: an interface at these
+   densities reads as marketing at 16. Prose is not an interface, so it takes
+   16px and looser leading. That is not a contradiction of the earlier rule, it
+   is the same rule — size follows the job — applied to a different job.
+
+   ── Why inline code is 0.9em ──────────────────────────────────────────────
+
+   Not for looks. A mono face set at the same nominal size as the surrounding
+   sans looks noticeably bigger, because its x-height and letter widths are
+   larger. Matching the numbers gives you mismatched text. 0.9em matches what
+   the eye actually measures.
+
+   The vertical padding is small on purpose too: padding on an inline element
+   does not grow the line box, so a generous one overlaps the line above. The
+   ground has to read without pushing anything around.
+--------------------------------------------------------------------------- */
+
+.prose {
+  /* 68 characters. The comfortable band is roughly 45–90; past that the eye
+     loses its place on the return sweep, below it the text feels chopped. */
+  --measure: 68ch;
+
+  /* Rhythm, in em so it tracks whatever size the block is set at.
+
+     lead > flow > bind is the same Gestalt argument the spacing ladder makes:
+     a heading needs MORE room above it than below, so it groups with the
+     content it introduces rather than floating between two blocks. Equal
+     space above and below is the single most common reason a heading looks
+     detached from its own section. */
+  --prose-flow: 1.1em;
+  --prose-lead: 2.2em;
+  --prose-bind: 0.6em;
+
+  max-width: var(--measure);
+  font-size: 1rem;
+  line-height: 1.7;
+  /* The reading step, not the strong one. Body prose at maximum contrast is a
+     glare rather than a virtue, and it leaves emphasis nowhere to go: if the
+     paragraph is already as dark as the ink gets, a heading can only differ by
+     size and weight. Lifting the body gives the hierarchy a third dimension. */
+  color: var(--gray-reading);
+  text-wrap: pretty;
+}
+
+.prose > * + * {
+  margin-top: var(--prose-flow);
+}
+
+.prose :is(h1, h2, h3, h4) {
+  /* Full contrast. This is the half of the pairing that makes the body's lift
+     read as a decision rather than as washed-out text. */
+  color: var(--foreground);
+  margin-top: var(--prose-lead);
+  margin-bottom: var(--prose-bind);
+  text-wrap: balance;
+}
+.prose > :is(h1, h2, h3, h4) + * {
+  margin-top: var(--prose-bind);
+}
+.prose > :first-child {
+  margin-top: 0;
+}
+
+/* The reading register, at prose sizes. */
+.prose h1 {
+  font-size: var(--type-title);
+  line-height: 1.15;
+  letter-spacing: -0.022em;
+  font-weight: 500;
+}
+.prose h2 {
+  font-size: var(--type-heading);
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  font-weight: 500;
+}
+.prose :is(h3, h4) {
+  font-size: var(--type-subheading);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+/* ── Texture ─────────────────────────────────────────────────────────────── */
+
+.prose :is(strong, b) {
+  color: var(--foreground);
+  font-weight: 600;
+}
+
+/* Colour AND underline, never one alone. Colour alone fails anyone who cannot
+   distinguish it (WCAG 1.4.1); underline alone is hard to scan in a dense
+   page. `from-font` keeps the rule at the weight the typeface intends. */
+.prose a {
+  color: var(--blue-text);
+  text-decoration: underline;
+  text-decoration-thickness: from-font;
+  text-underline-offset: 0.2em;
+  transition: color var(--motion-quick) var(--ease-out);
+}
+.prose a:hover {
+  color: var(--blue-text-strong);
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  /* The tint, so it reads on the page, on a card, or over an image — the one
+     place inline code actually lands unpredictably. */
+  background: var(--gray-tint);
+  border-radius: var(--rung-mark);
+  padding: 0.1em 0.35em;
+  /* So a span that wraps across lines keeps its ground and its corners on
+     both fragments instead of one long torn rectangle. */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.prose kbd {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--surface-raised);
+  border: 1px solid var(--gray-hairline-strong);
+  border-radius: var(--rung-mark);
+  box-shadow: var(--depth-raised);
+  color: var(--foreground);
+  padding: 0.15em 0.4em;
+}
+
+.prose pre {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  line-height: 1.6;
+  /* The FILL, not the tint — colour-roles rule 5. A code block is the largest
+     text-on-a-tinted-ground surface in the system, and a tint reproduces its
+     step only over paper or ink: over the page it lands darker, which cost the
+     string colour its contrast floor in light mode (4.32:1). Inline code keeps
+     the tint because it is a few words on an unpredictable ground; a block is
+     a lot of text on a known one. */
+  background: var(--gray-fill);
+  border: 1px solid var(--border);
+  border-radius: var(--rung-panel);
+  padding: var(--space-gutter);
+  overflow-x: auto;
+}
+/* Inside a block, the ground is the block's. Nesting the inline treatment
+   gives you a tint on a tint and a radius on every token. */
+.prose pre code {
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  border-radius: 0;
+}
+
+/* ── Blocks ──────────────────────────────────────────────────────────────── */
+
+.prose :is(ul, ol) {
+  padding-left: 1.4em;
+}
+.prose li::marker {
+  color: var(--muted-foreground);
+}
+/* Items in a list are one group; they sit closer than paragraphs do. */
+.prose li + li {
+  margin-top: 0.35em;
+}
+.prose li > :is(ul, ol) {
+  margin-top: 0.35em;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ol {
+  list-style: decimal;
+}
+
+.prose blockquote {
+  border-left: 2px solid var(--gray-hairline-strong);
+  padding-left: var(--space-gutter);
+  color: var(--muted-foreground);
+}
+
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin-top: var(--prose-lead);
+  margin-bottom: var(--prose-lead);
+}
+
+.prose :is(figcaption, small) {
+  font-size: var(--type-caption);
+  color: var(--muted-foreground);
+}

@@ -1,0 +1,67 @@
+/* ---------------------------------------------------------------------------
+   Native
+   ---------------------------------------------------------------------------
+
+   The parts of the page the BROWSER draws, not us: scrollbars, the text
+   selection, the caret, native form controls, and the canvas that exists
+   before any CSS has painted.
+
+   This file exists because every other runner in this project checks colour
+   and geometry in our own stylesheets, and none of them can see any of the
+   above. That blind spot had a real cost — the whole dark theme was shipping
+   with light scrollbars and nothing noticed, because nothing was looking at
+   the one surface we do not draw.
+
+   ── color-scheme is the load-bearing line ─────────────────────────────────
+
+   Without it the browser assumes a light page no matter what we paint, and
+   three things go wrong at once: scrollbars render light against a near-black
+   page, every native control (checkbox, radio, range, the select popup, date
+   pickers) renders in light styling, and the canvas flashes white before the
+   first paint. None of those are things CSS colours can fix after the fact —
+   they are the browser's own UI, and this declaration is the only way to ask
+   for the other one.
+
+   It is global rather than theme-scoped on purpose: a consumer running stock
+   shadcn deserves working scrollbars just as much.
+--------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Scrollbars are deliberately NOT styled beyond the line above. Once the
+   browser knows the scheme it draws them correctly, and a hand-styled
+   scrollbar is a decision to maintain across four engines in exchange for
+   almost nothing. */
+
+@layer base {
+  /* Selection is the one colour on the page that would otherwise be someone
+     else's. The tint rather than a solid, because a selection lands on
+     anything — a card, a code block, an image caption — and has to modify
+     whatever is under it rather than replace it.
+
+     Its text contrast is measured on real grounds by audit-native.mjs, since
+     colour-roles rule 5 is explicit that a tint carries no guarantee of its
+     own. */
+  ::selection {
+    background-color: var(--blue-tint-active, highlight);
+    color: var(--foreground, highlighttext);
+  }
+
+  :root {
+    /* Native checkbox, radio, range and progress. Without this they are
+       whatever blue the operating system likes. */
+    accent-color: var(--blue-solid, auto);
+
+    /* The caret is the same statement as the focus ring — "you are here" — so
+       it is the same colour. That is the reason it is coloured at all; a
+       caret tinted for looks would be exactly the arbitrary spend the system
+       argues against. */
+    caret-color: var(--focus, currentColor);
+  }
+}
