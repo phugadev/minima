@@ -172,3 +172,32 @@ A check that cannot read its input must **fail**, not pass. `audit-alpha` now
 throws on a non-literal colour and fails on any non-finite ratio. This is the
 second no-op check in this project; the first compared a colour against itself.
 Both were only caught by disbelieving a clean result.
+
+## 6. Three text levels, and the third is only real in dark
+
+`foreground`, `muted-foreground`, `subtle-foreground`. The first two are
+shadcn's. The third is the one semantic name Minima adds, and it was added
+because a consumer needed it, not ahead of one: enrictrillo.com sets its
+metadata one step quieter than muted on 45 call sites, and without the level
+the page flattened.
+
+It is solved, not picked — halfway in contrast ratio between muted and the
+4.5:1 text floor, on the worst ground text can sit on:
+
+```
+          muted          subtle         floor
+dark      0.77  ~9:1     0.698          4.5:1 at 0.588
+light     0.52  ~5.2:1   0.537          4.5:1 at 0.554
+```
+
+In dark that lands clear of both neighbours. In light it does not, because
+muted already sits near the floor, and the two are the same colour to the eye.
+That is reported here rather than hidden: `subtle` is legal in light, not
+distinct. Making it distinct would mean darkening muted for every consumer.
+
+`audit-ramps` holds it to the text floor on every ground text can meet —
+including dark's raised rungs, where a quiet colour runs out first — and fails
+if it ever reads louder than muted. `audit-depth` checks it on every surface rung.
+
+A fourth level stays local. The site that asked for this one also carries a
+quieter tier; one consumer is not evidence for a scale.

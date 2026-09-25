@@ -96,6 +96,7 @@ for (const mode of ["light", "dark"]) {
   const page = srgb(...Object.values(oklch(resolve(vars, vars.background))))
   const fg = resolve(vars, vars.foreground)
   const muted = resolve(vars, vars["muted-foreground"])
+  const subtle = resolve(vars, vars["subtle-foreground"])
 
   let contactAlpha = null
 
@@ -140,6 +141,7 @@ for (const mode of ["light", "dark"]) {
     for (const [name, colour, floor] of [
       ["foreground", fg, 4.5],
       ["muted-foreground", muted, 4.5],
+      ["subtle-foreground", subtle, 4.5],
     ]) {
       const ratio = contrast(lum(colour), y)
       checked++

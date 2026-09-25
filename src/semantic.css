@@ -27,7 +27,7 @@
   --surface: var(--gray-bg);
   --fill: var(--gray-fill);
 
-  /* --- shadcn's eighteen. No new names. ------------------------------- */
+  /* --- shadcn's eighteen, and one name earned by a consumer. --------- */
   --background: var(--canvas);
   --foreground: var(--gray-text-strong);
   --card: var(--surface-raised);
@@ -51,6 +51,11 @@
   --secondary-foreground: var(--gray-text-strong);
   --muted: var(--fill);
   --muted-foreground: var(--gray-text);
+  /* The one name here that is not shadcn's. A third text level, one step
+     quieter than muted, added when a real consumer flattened without it —
+     solved, not chosen, in scripts/generate-scales.mjs (solveSubtle). Distinct
+     from muted in dark; in light it is legal but the same colour to the eye. */
+  --subtle-foreground: var(--gray-text-subtle);
   /* Hover is a veil, not a swap: the row underneath might be striped,
      selected, or an image. --muted and --secondary stay opaque because they
      are surfaces things sit ON, and an opaque ground is what makes their

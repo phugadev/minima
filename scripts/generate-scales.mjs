@@ -270,6 +270,44 @@ export function grayRamp(lTrack) {
  */
 export const MARK_STEP = (mode) => (mode === "light" ? 9 : 8)
 
+/* Every ground text can sit on, as gray steps. Light raises with shadow, so
+   text only ever meets the page and the card. Dark raises with surface, up to
+   the overlay and selected rungs at step 4 — the brightest ground, and so the
+   one that decides whether a quiet text colour is still text. */
+export const TEXT_GROUNDS = { light: [1, 2], dark: [1, 2, 3, 4] }
+export const TEXT_FLOOR = 4.5
+
+/* A third text level, below muted and above the floor.
+
+   Solved rather than chosen: the lightness whose worst contrast across
+   TEXT_GROUNDS is the geometric mean of muted's worst and the 4.5 floor —
+   halfway between them in ratio, which is the scale contrast is perceived on.
+
+   It exists because a real consumer needed it: enrictrillo.com carries mono
+   metadata one step quieter than muted on 45 call sites, and collapsing the
+   two flattened the page. In dark that gap is wide (muted is ~9:1) and the
+   level lands well clear of both neighbours.
+
+   In light it is not, and this should be read before reaching for it there.
+   Muted is already ~5.2:1, so the midpoint sits ~0.015 L below it — the same
+   colour to the eye. The token is legal in light, not distinct. Making it
+   distinct would mean darkening muted, which moves every muted label in every
+   consumer for the sake of one that has not asked in light. */
+export function solveSubtle(mode, grayTrack) {
+  const grounds = TEXT_GROUNDS[mode].map((s) => relLuminance(grayTrack[s - 1], 0, 0))
+  const worst = (L) => Math.min(...grounds.map((g) => contrast(relLuminance(L, 0, 0), g)))
+  const target = Math.sqrt(worst(grayTrack[8]) * TEXT_FLOOR)
+  /* Bisect between the ground and muted: contrast is monotonic in L on
+     either side of the ground, so the crossing is unique. */
+  let [lo, hi] = [grayTrack[1], grayTrack[8]]
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2
+    if (worst(mid) < target) lo = mid
+    else hi = mid
+  }
+  return hi
+}
+
 /** Every ramp value for one mode, as a flat `{ "gray-1": "oklch(…)" }` map. */
 export function rampVars(mode) {
   const light = mode === "light"
@@ -294,6 +332,7 @@ export function rampVars(mode) {
   const grayish = { name: "gray", hue: 0, cMax: 0, lPeak: 0.5, lBias: 0 }
   const cTrack = light ? C_LIGHT : C_DARK
   vars["gray-reading"] = `oklch(${r3(L_GRAY_READING[mode])} 0 0)`
+  vars["gray-text-subtle"] = `oklch(${r3(solveSubtle(mode, grayTrack))} 0 0)`
   vars["gray-on-solid"] = pickOnSolid(grayish, grayTrack, cTrack, biasScale).css
   vars["gray-mark"] = vars[`gray-${MARK_STEP(mode)}`]
   vars["gray-on-mark"] = pickOnSolid(grayish, grayTrack, cTrack, biasScale, MARK_STEP(mode)).css
