@@ -30,6 +30,9 @@ import {
   CHROMA,
   MARK_STEP,
   TEXT_BEARING,
+  TEXT_GROUNDS,
+  TEXT_FLOOR,
+  solveSubtle,
 } from "./generate-scales.mjs"
 
 const arg = (name, fallback) => {
@@ -58,6 +61,7 @@ function build(mode, chromaScale) {
   grayRamp(light ? L_GRAY_LIGHT : L_GRAY_DARK).forEach((v, i) => {
     vars[`gray-${STEPS[i]}`] = v
   })
+  vars["gray-text-subtle"] = `oklch(${solveSubtle(mode, light ? L_GRAY_LIGHT : L_GRAY_DARK)} 0 0)`
   for (const h of HUES) {
     const scaled = { ...h, cMax: h.cMax * chromaScale }
     ramp(scaled, lTrack, cTrack, biasScale).forEach((v, i) => {
@@ -90,7 +94,12 @@ function checks(mode) {
   /* Neutral text. The backbone carries almost all the reading. */
   onBoth("gray-10 (body)", "gray-10", 7)
   onBoth("gray-9 (muted)", "gray-9", 4.5)
-  onBoth("gray-8 (subtle)", "gray-8", 3)
+  /* The third text level is text, so it owes the text floor — not the 3:1 a
+     mark gets. Checked on every ground text can meet, including dark's raised
+     rungs, because that is where a quiet colour runs out first. */
+  for (const s of TEXT_GROUNDS[mode])
+    out.push({ label: `gray-text-subtle on gray-${s}`, fg: "gray-text-subtle", bg: `gray-${s}`, floor: TEXT_FLOOR })
+  onBoth("gray-8 (solid, marks)", "gray-8", 3)
 
   for (const h of HUES.map((x) => x.name)) {
     /* Status chip: label on its own tinted ground. Text floor. */
@@ -147,6 +156,18 @@ function run(chromaScale, { quiet = false } = {}) {
       const r = contrast(lum(vars[c.fg]), lum(vars[c.bg]))
       if (r < c.floor) {
         failures.push({ mode, ...c, ratio: +r.toFixed(2) })
+      }
+    }
+    /* A third text level that reads louder than muted is not a third level,
+       it is a second muted with the order wrong. Floors cannot see that —
+       both could clear 4.5 the wrong way round. */
+    for (const s of TEXT_GROUNDS[mode]) {
+      total++
+      const ground = lum(vars[`gray-${s}`])
+      const subtle = contrast(lum(vars["gray-text-subtle"]), ground)
+      const muted = contrast(lum(vars["gray-9"]), ground)
+      if (subtle > muted) {
+        failures.push({ mode, label: `gray-text-subtle louder than muted on gray-${s}`, floor: +muted.toFixed(2), ratio: +subtle.toFixed(2) })
       }
     }
     /* Deviation D6: only the state hues carry the on-solid guarantee. Blue,

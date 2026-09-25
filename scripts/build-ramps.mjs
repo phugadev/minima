@@ -53,7 +53,7 @@ const block = (mode, selector) => {
     for (const s of STEPS) {
       lines.push(`  --${name}-${ROLE[s]}: var(--${name}-${s});`)
     }
-    for (const extra of ["on-solid", "mark", "on-mark", "reading"]) {
+    for (const extra of ["on-solid", "mark", "on-mark", "reading", "text-subtle"]) {
       if (vars[`${name}-${extra}`]) {
         lines.push(`  --${name}-${extra}: ${vars[`${name}-${extra}`]};`)
       }
@@ -90,6 +90,8 @@ const theme = () => {
        every hue would be nine tokens nothing asks for. Guarded rather than
        emitted blind, which is the bug --color-gray-on-solid used to have. */
     if (name === "gray") lines.push(`  --color-gray-reading: var(--gray-reading);`)
+    /* And a third text level — see solveSubtle. Gray only, for the same reason. */
+    if (name === "gray") lines.push(`  --color-gray-text-subtle: var(--gray-text-subtle);`)
     lines.push(`  --color-${name}-on-mark: var(--${name}-on-mark);`)
     /* Translucent rungs, named for the job rather than mirrored from the
        opaque role: `fill` replaces its ground, `tint` veils it. */

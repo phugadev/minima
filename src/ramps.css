@@ -26,6 +26,7 @@
   --gray-mark: oklch(0.52 0 0);
   --gray-on-mark: oklch(1 0 0);
   --gray-reading: oklch(0.38 0 0);
+  --gray-text-subtle: oklch(0.537 0 0);
   --gray-tint-subtle: rgb(7 7 7 / 2.7%);
   --gray-tint: rgb(1 1 1 / 5.8%);
   --gray-tint-hover: rgb(3 3 3 / 8.2%);
@@ -331,6 +332,7 @@
   --gray-mark: oklch(0.6 0 0);
   --gray-on-mark: oklch(0.18 0 0);
   --gray-reading: oklch(0.88 0 0);
+  --gray-text-subtle: oklch(0.698 0 0);
   --gray-tint-subtle: rgb(252 252 252 / 7.4%);
   --gray-tint: rgb(254 254 254 / 10.9%);
   --gray-tint-hover: rgb(253 253 253 / 13.7%);
@@ -634,6 +636,7 @@
   --color-gray-on-solid: var(--gray-on-solid);
   --color-gray-mark: var(--gray-mark);
   --color-gray-reading: var(--gray-reading);
+  --color-gray-text-subtle: var(--gray-text-subtle);
   --color-gray-on-mark: var(--gray-on-mark);
   --color-gray-tint-subtle: var(--gray-tint-subtle);
   --color-gray-tint: var(--gray-tint);
