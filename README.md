@@ -44,7 +44,7 @@ the reason the theme is one file rather than a component library.
 </table>
 
 Screens from the development lab, not something Minima ships — it ships tokens
-and five components, and the page above is ordinary shadcn markup using them.
+and six components, and the page above is ordinary shadcn markup using them.
 
 ## Install
 

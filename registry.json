@@ -149,6 +149,25 @@
           "type": "registry:ui"
         }
       ]
+    },
+    {
+      "name": "layout",
+      "type": "registry:ui",
+      "title": "Layout",
+      "description": "The page and its regions: Container, Section, PageHeader and Eyebrow, every gap a rung of the space ladder so the page follows density.",
+      "dependencies": [
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "phugadev/minima/theme",
+        "phugadev/minima/cn"
+      ],
+      "files": [
+        {
+          "path": "registry/ui/layout.tsx",
+          "type": "registry:ui"
+        }
+      ]
     }
   ]
 }

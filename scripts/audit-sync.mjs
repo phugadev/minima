@@ -63,7 +63,7 @@ for (const name of CSS) compare(`css/${name}`, cssUrl(name), new URL(`src/${name
 
 /* The components this repo actually claims. Stock shadcn components in the lab
    are not ours and are not compared. */
-for (const f of ["button.tsx", "input.tsx", "tabs.tsx", "stat.tsx", "status.tsx"])
+for (const f of ["button.tsx", "input.tsx", "tabs.tsx", "stat.tsx", "status.tsx", "layout.tsx"])
   compare(`ui/${f}`, componentUrl(f), new URL(`registry/ui/${f}`, root))
 
 compare("lib/cn.ts", libUrl(), new URL("registry/lib/cn.ts", root))
