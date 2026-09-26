@@ -20,6 +20,10 @@
  * Drift or a claimed-but-unused item fails. An item with no consumer yet is
  * reported, not failed, before 1.0 — docs/1.0.md makes it a gate there.
  *
+ * A consumer with a `branch` is an adoption still in review: it is checked in
+ * full on that branch, but it proves nothing until it is on its default
+ * branch, so it is reported as pending and left out of coverage.
+ *
  *   npm run audit:consumers            (needs `gh` authenticated)
  */
 import { readFileSync } from "node:fs"
@@ -76,11 +80,15 @@ function aliasRootOf(repo, byPath) {
 const failures = []
 const fail = (who, detail) => failures.push(`${who.padEnd(34)} ${detail}`)
 const usedBy = {}
+const pendingBy = {}
+const pendingNames = []
 const modes = new Set()
 const kinds = new Set()
 
 for (const c of consumers) {
-  const { default_branch: branch } = gh(`repos/${c.repo}`)
+  const { default_branch } = gh(`repos/${c.repo}`)
+  const branch = c.branch ?? default_branch
+  const pending = branch !== default_branch
   const tree = gh(`repos/${c.repo}/git/trees/${branch}?recursive=1`).tree
   const byPath = new Map(tree.filter((t) => t.type === "blob").map((t) => [t.path, t.sha]))
   const sources = tree.filter(
@@ -95,7 +103,7 @@ for (const c of consumers) {
     })
   )
 
-  console.log(`\n${c.name}  (${c.repo}@${branch}, ${c.kind}, ${c.modes.join(" + ")})`)
+  console.log(`\n${c.name}  (${c.repo}@${branch}, ${c.kind}, ${c.modes.join(" + ")})${pending ? "  PENDING — not on " + default_branch : ""}`)
   for (const [name, paths] of Object.entries(c.items)) {
     const item = registry.items.find((i) => i.name === name)
     if (!item) {
@@ -122,15 +130,18 @@ for (const c of consumers) {
       ([p, mods]) => !paths.includes(p) && [...mods].some((m) => targets.has(m))
     )
     if (importers.length === 0) fail(`${c.name} ${name}`, "installed, but nothing imports it")
-    else (usedBy[name] ??= []).push(c.name)
+    else if (!pending) (usedBy[name] ??= []).push(c.name)
+    else (pendingBy[name] ??= []).push(c.name)
     console.log(
       `  ${name.padEnd(14)} ${current ? "current" : "DRIFTED"}   ${
         importers.length ? `used by ${importers.length} file(s)` : "UNUSED"
       }`
     )
   }
-  c.modes.forEach((m) => modes.add(m))
-  kinds.add(c.kind)
+  if (!pending) {
+    c.modes.forEach((m) => modes.add(m))
+    kinds.add(c.kind)
+  } else pendingNames.push(c.name)
 }
 
 console.log("\ncoverage")
@@ -138,12 +149,15 @@ const unproven = []
 for (const item of registry.items) {
   const users = usedBy[item.name] ?? []
   if (!users.length) unproven.push(item.name)
-  console.log(`  ${item.name.padEnd(14)} ${users.length ? users.join(", ") : "— no consumer yet"}`)
+  const waiting = pendingBy[item.name]?.length ? `  (pending: ${pendingBy[item.name].join(", ")})` : ""
+  console.log(`  ${item.name.padEnd(14)} ${users.length ? users.join(", ") : "— no consumer yet"}${waiting}`)
 }
 console.log(`  modes          ${["light", "dark"].map((m) => `${m} ${modes.has(m) ? "proven" : "unproven"}`).join(", ")}`)
 console.log(`  kinds          ${[...kinds].join(", ")} (${kinds.size} of the 2 docs/1.0.md asks for)`)
 
-console.log(`\n${consumers.length} consumer(s) — ${failures.length} failing, ${unproven.length} item(s) with no consumer yet`)
+console.log(
+  `\n${consumers.length} consumer(s)${pendingNames.length ? `, ${pendingNames.length} pending` : ""} — ${failures.length} failing, ${unproven.length} item(s) with no consumer yet`
+)
 if (failures.length) {
   console.log("")
   for (const f of failures) console.log(`  ${f}`)

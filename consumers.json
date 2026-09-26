@@ -6,14 +6,63 @@
       "repo": "phugadev/enrictrillo-site",
       "url": "https://enrictrillo.com",
       "kind": "reading site",
-      "modes": ["dark"],
+      "modes": [
+        "dark"
+      ],
       "items": {
-        "theme": ["styles/minima.css"],
-        "syntax-shiki": ["styles/minima-syntax-light.json", "styles/minima-syntax-dark.json"],
-        "cn": ["lib/cn.ts"],
-        "button": ["components/ui/button.tsx"],
-        "status": ["components/ui/status.tsx"],
-        "layout": ["components/ui/layout.tsx"]
+        "theme": [
+          "styles/minima.css"
+        ],
+        "syntax-shiki": [
+          "styles/minima-syntax-light.json",
+          "styles/minima-syntax-dark.json"
+        ],
+        "cn": [
+          "lib/cn.ts"
+        ],
+        "button": [
+          "components/ui/button.tsx"
+        ],
+        "status": [
+          "components/ui/status.tsx"
+        ],
+        "layout": [
+          "components/ui/layout.tsx"
+        ]
+      }
+    },
+    {
+      "name": "Watchman",
+      "repo": "phugadev/watchman",
+      "url": "https://github.com/phugadev/watchman",
+      "kind": "dashboard",
+      "modes": [
+        "light",
+        "dark"
+      ],
+      "branch": "adopt-minima",
+      "items": {
+        "theme": [
+          "styles/minima.css"
+        ],
+        "cn": [
+          "src/lib/cn.ts"
+        ],
+        "button": [
+          "src/components/ui/button.tsx"
+        ],
+        "input": [
+          "src/components/ui/input.tsx"
+        ],
+        "tabs": [
+          "src/components/ui/tabs.tsx"
+        ],
+        "stat": [
+          "src/components/ui/stat.tsx"
+        ],
+        "status": [
+          "src/components/ui/status.tsx"
+        ]
       }
     }
   ]
