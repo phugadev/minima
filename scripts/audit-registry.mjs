@@ -107,6 +107,19 @@ for (const item of registry.items ?? []) {
   }
 }
 
+/* Documented, or it does not exist for anyone but its author. Every item a
+   consumer can add has to be named in the install guide by the exact address
+   they would type — a component that ships but is never written down is
+   found by reading registry.json, which nobody does. */
+const installGuide = readFileSync(new URL("../docs/install.md", import.meta.url), "utf8")
+const address = registry.homepage?.split("/").slice(-2).join("/")
+for (const item of registry.items ?? []) {
+  checked++
+  /* Whole name only: "…/stat" must not pass on the strength of "…/status". */
+  if (!new RegExp(`${address}/${item.name}(?![\\w-])`).test(installGuide))
+    fail(`registry.json → ${item.name}`, `not in docs/install.md — document "${address}/${item.name}" or it is invisible`)
+}
+
 const owner = registry.homepage?.split("/").slice(-2).join("/")
 console.log(`${registry.name} — ${registry.items?.length ?? 0} items, installed as ${owner}/<item>`)
 for (const item of registry.items ?? []) {
@@ -121,4 +134,4 @@ if (failures.length) {
   console.log("")
   process.exit(1)
 }
-console.log("PASS — every item resolves, every dependency is an address\n")
+console.log("PASS — every item resolves, every dependency is an address, every item is documented\n")

@@ -200,9 +200,9 @@ const ON_SOLID_MARGIN = 0.35
    The others are deliberately exempt. A saturated hue around L 0.60 sits in a
    dead zone where neither white nor near-black reaches 4.5:1 — that is a
    property of colour, not a bug — and forcing every hue out of it would cost
-   the whole palette its punch to protect a pairing Minima never makes. Blue,
-   indigo, purple and pink are used as links, rings, tints and data marks;
-   none of those put small text on a step 9 fill. */
+   the whole palette its punch to protect a pairing Minima never makes.
+   Orange, teal, blue, purple and pink are used as links, rings, tints and
+   data marks; none of those put small text on a solid. */
 export const TEXT_BEARING = new Set(["green", "amber", "red", "cyan"])
 
 /**

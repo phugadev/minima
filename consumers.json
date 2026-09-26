@@ -1,0 +1,20 @@
+{
+  "$comment": "Every project that installs Minima from this registry, and where each item landed in it. scripts/audit-consumers.mjs reads each consumer's default branch on GitHub and checks the installed files are current and actually used. Adding a consumer here is a claim; the audit is what makes it true.",
+  "consumers": [
+    {
+      "name": "enrictrillo.com",
+      "repo": "phugadev/enrictrillo-site",
+      "url": "https://enrictrillo.com",
+      "kind": "reading site",
+      "modes": ["dark"],
+      "items": {
+        "theme": ["styles/minima.css"],
+        "syntax-shiki": ["styles/minima-syntax-light.json", "styles/minima-syntax-dark.json"],
+        "cn": ["lib/cn.ts"],
+        "button": ["components/ui/button.tsx"],
+        "status": ["components/ui/status.tsx"],
+        "layout": ["components/ui/layout.tsx"]
+      }
+    }
+  ]
+}
