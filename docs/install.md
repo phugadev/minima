@@ -35,6 +35,19 @@ not guessed: `flex-direction: row` instead of `column`, `height: 0px` instead of
 If your project was initialised before that line existed, add it. The theme
 alone does not need it.
 
+**The root left at the reader's size.** Every size in Minima is a `rem`, so
+anything that sets `font-size` on `html` or `:root` rescales the whole theme —
+type, space, radius, control heights — and nothing looks broken, just small.
+Older design systems do this to set a body size. A site that came from one
+ran every Minima token at 14/16 for three weeks. Check it:
+
+```js
+getComputedStyle(document.documentElement).fontSize   // the browser default, 16px unless the reader changed it
+```
+
+If it is not, set the root back to `100%` and put the size you wanted on
+`body` instead. `npm run audit:install` fails on this.
+
 You do **not** need to remove your existing components, or your existing
 colours, or anything else. Minima is additive.
 
