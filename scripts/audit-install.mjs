@@ -89,6 +89,14 @@ const browser = await chromium.launch()
 const ctx = await browser.newContext()
 const page = await ctx.newPage()
 
+/* What 1rem is when nobody has touched it — this browser's default, which
+   stands in for the reader's. Read off a blank page rather than assumed to be
+   16px, so a changed default is respected rather than failed. */
+const blank = await ctx.newPage()
+await blank.goto("about:blank")
+const readerRoot = await blank.evaluate(() => getComputedStyle(document.documentElement).fontSize)
+await blank.close()
+
 for (const mode of ["light", "dark"]) {
   await page.goto(`${URL}/minima-coverage`, { waitUntil: "networkidle" })
   await page.evaluate((m) => document.documentElement.classList.toggle("dark", m === "dark"), mode)
@@ -101,6 +109,23 @@ for (const mode of ["light", "dark"]) {
   checked++
   if (Number(count) !== probes.length)
     fail(mode, "(page)", `page renders ${count} probes, the manifest has ${probes.length} — regenerate it`)
+
+  /* The root, before anything else is believed. Every size in the theme is a
+     rem, and every check below compares a utility against a probe on the SAME
+     page — so a consumer that shrinks the root shrinks both sides equally and
+     the whole run passes, wired and 12.5% small. That happened: a site whose
+     previous design system set the root to 0.875rem ran every Minima token at
+     14/16 for three weeks, and this runner would have said PASS throughout.
+     Only an absolute reference can see it, and the blank page is that. */
+  checked++
+  const root = await page.evaluate(() => getComputedStyle(document.documentElement).fontSize)
+  console.log(`${mode.padEnd(5)} root ${root} (reader's default ${readerRoot})`)
+  if (root !== readerRoot)
+    fail(
+      mode,
+      "(root font-size)",
+      `the root is ${root}, the reader's default is ${readerRoot} — something in this app sets font-size on html or :root, so every Minima rem is scaled by ${(parseFloat(root) / parseFloat(readerRoot)).toFixed(3)}. Set the root back to 100% and put a body size on body instead`
+    )
 
   const rows = await measure(page, [...probes, canary])
   const canaryRow = rows.pop()
