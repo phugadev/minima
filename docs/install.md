@@ -156,12 +156,27 @@ component with its literals replaced by tokens — control heights that follow
 density, radius that tracks height, and in the case of `tabs` a selected state
 that reads in dark mode, which the stock grey-on-grey track does not.
 
-Two components have no shadcn equivalent:
+Three have no shadcn equivalent:
 
 ```bash
 npx shadcn@latest add phugadev/minima/stat     # a measurement with a delta
 npx shadcn@latest add phugadev/minima/status   # a state, as a chip
+npx shadcn@latest add phugadev/minima/layout   # the page and its regions
 ```
+
+`layout` is four primitives in one file — `Container`, `Section`,
+`PageHeader` and `Eyebrow` — taken from the first site built on Minima rather
+than designed ahead of one. Every gap in them is a rung of the space ladder, so
+a page built from them follows `data-density` with no further work:
+
+```tsx
+<PageHeader eyebrow={<Eyebrow>Writing</Eyebrow>} title="Notes" lead="One paragraph on why." />
+<Section label="Latest" aside="12 posts">…</Section>
+```
+
+`Section` puts one section rung above itself and none below, so two regions
+sit one rung apart, not two. `containerVariants()` gives the page column to
+any element that is not a `Container`.
 
 Each declares `phugadev/minima/theme` and `phugadev/minima/cn` as dependencies,
 so adding a component first pulls both in for you.

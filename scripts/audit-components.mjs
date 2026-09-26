@@ -25,7 +25,7 @@ import { componentUrl, componentsDir, componentPath, readCss, LAYOUT } from "./s
    Bare filenames, not paths: the directory is sources.mjs's business, and the
    last time this list carried a path prefix it was the wrong one, so the
    "unclaimed" report matched nothing and named every ported component. */
-const OWNED = ["stat.tsx", "status.tsx", "button.tsx", "tabs.tsx", "input.tsx"]
+const OWNED = ["stat.tsx", "status.tsx", "button.tsx", "tabs.tsx", "input.tsx", "layout.tsx"]
 
 const TW_PALETTE =
   "slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose"
