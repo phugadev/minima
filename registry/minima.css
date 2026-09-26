@@ -1259,6 +1259,16 @@
   --type-body--line-height: 1.6;
   --type-body--letter-spacing: 0em;
 
+  /* The paragraph that opens a page — under a hero heading, or the intro
+     above an index. Read in sentences, so it is the reading register at its
+     normal weight; one step above prose's 16px so it reads as the way in
+     rather than as the first paragraph of the body. Added when a real
+     consumer set seven of them by hand at 17px. Tracking tightens a hair,
+     as it does for every reading size above 16. */
+  --type-lead: 1.125rem;
+  --type-lead--line-height: 1.6;
+  --type-lead--letter-spacing: -0.005em;
+
   --type-caption: 0.8125rem;
   --type-caption--line-height: 1.5;
   --type-caption--letter-spacing: 0em;
@@ -1348,6 +1358,11 @@
   line-height: var(--type-subheading--line-height);
   letter-spacing: var(--type-subheading--letter-spacing);
   font-weight: var(--type-subheading--font-weight);
+}
+@utility type-lead {
+  font-size: var(--type-lead);
+  line-height: var(--type-lead--line-height);
+  letter-spacing: var(--type-lead--letter-spacing);
 }
 @utility type-body {
   font-size: var(--type-body);

@@ -36,6 +36,7 @@ const TYPE = [
   "type-title",
   "type-heading",
   "type-subheading",
+  "type-lead",
   "type-body",
   "type-caption",
   "type-caption-sm",
