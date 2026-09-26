@@ -125,8 +125,8 @@ both survive — leaving the stylesheet order to decide instead of your
 
 ## Verified, not asserted
 
-Every rule ships with the thing that proves it. `npm run audit` runs twelve
-checks over the built CSS and the registry:
+Every rule ships with the thing that proves it. `npm run audit` runs thirteen
+checks over the built CSS, the registry and its history:
 
 ```
 ramps       every contrast floor holds across 110 pairings
@@ -140,14 +140,16 @@ syntax      every token is legible on the code ground and none are confusable
 cascade     no dangling var(), and nothing unlayered outranks a utility
 components  every component is expressed in tokens, no literals
 merge       every utility is registered and displaces its stock counterpart
-registry    every item resolves, every dependency is an address
+registry    every item resolves, every dependency is an address, every item is documented
+changelog   every commit that changes what ships also records it
 ```
 
-Two more need a real browser, because they are about what a consumer's build
+Three more need a real browser, because they are about what a consumer's build
 actually produces rather than about a value:
 
 ```bash
 URL=http://localhost:3000 npm run audit:live      # reduced motion, focus rings
+URL=http://localhost:3000 PAGES=/,/blog npm run audit:pages   # contrast as rendered, overflow, root
 
 APP=../some-install npm run coverage              # generate the page…
 cd ../some-install && npm run build && npx next start -p 3210
@@ -162,6 +164,18 @@ so every token appears in scanned source by construction and a missing utility
 can only mean the theme is wrong. It then separates the three bugs that share
 that symptom: the token is undefined, the utility was not emitted, or it points
 somewhere else.
+
+And one reads the projects that install Minima, because a system that only
+checks itself is the failure this project is built against:
+
+```bash
+npm run audit:consumers   # every installed item current and imported, per consumer
+```
+
+It prints which items, modes and kinds of project real consumers have proven.
+Those are the gates in [docs/1.0.md](docs/1.0.md), which is what 1.0 means here
+— until they hold there is no version, and changes accumulate in
+[CHANGELOG.md](CHANGELOG.md).
 
 Each of those exists because something broke. The registry check exists because
 bare `registryDependencies` resolve to shadcn's items rather than ours, and an

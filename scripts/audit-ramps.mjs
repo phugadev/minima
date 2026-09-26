@@ -170,10 +170,10 @@ function run(chromaScale, { quiet = false } = {}) {
         failures.push({ mode, label: `gray-text-subtle louder than muted on gray-${s}`, floor: +muted.toFixed(2), ratio: +subtle.toFixed(2) })
       }
     }
-    /* Deviation D6: only the state hues carry the on-solid guarantee. Blue,
-       indigo, purple and pink sit in a lightness dead zone where neither
-       near-black nor white clears 4.5:1 against their solid — that is a
-       property of colour, and those hues are never used as a text ground. */
+    /* Deviation D6: only the four state hues carry the on-solid guarantee.
+       The other five are never used as a text ground, and several sit in a
+       lightness dead zone where neither near-black nor white clears 4.5:1
+       against their solid — a property of colour, not a tuning error. */
     for (const h of HUES.filter((x) => TEXT_BEARING.has(x.name))) {
       total++
       const solid = lum(vars[`${h.name}-8`])
