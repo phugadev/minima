@@ -24,6 +24,12 @@
  *
  *   URL=http://localhost:3000 PAGES=/,/blog MODES=light,dark npm run audit:pages
  *
+ * Pages behind a login take a Playwright storage state — cookies from a
+ * signed-in session, saved once — so the same pages a user sees are the ones
+ * measured, not the login screen they redirect to:
+ *
+ *   STORAGE=./session.json URL=… PAGES=/dashboard npm run audit:pages
+ *
  * The contrast check was shown to fail before it was trusted: grey #444 on
  * #0a0a0a (2.03:1) and #ccc under a 90% white layer (1.30:1) both fail.
  */
@@ -33,6 +39,7 @@ const URL = process.env.URL ?? "http://localhost:3000"
 const PAGES = (process.env.PAGES ?? "/").split(",")
 const MODES = (process.env.MODES ?? "light,dark").split(",")
 const WIDTHS = [1280, 390]
+const STORAGE = process.env.STORAGE
 
 const failures = []
 let checked = 0
@@ -44,7 +51,12 @@ await blank.close()
 
 for (const mode of MODES) {
   for (const width of WIDTHS) {
-    const ctx = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: mode, reducedMotion: "reduce" })
+    const ctx = await browser.newContext({
+      viewport: { width, height: 900 },
+      colorScheme: mode,
+      reducedMotion: "reduce",
+      ...(STORAGE ? { storageState: STORAGE } : {}),
+    })
     const page = await ctx.newPage()
     for (const path of PAGES) {
       const res = await page.goto(URL + path, { waitUntil: "load" })

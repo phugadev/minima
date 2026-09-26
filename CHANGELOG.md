@@ -25,6 +25,11 @@ that document defines it: roles and names are the API, values are not.
   plus sideways scroll and the root font size.
 - `audit-registry` fails when an item is not documented in docs/install.md by
   its address.
+- `audit:pages` takes a Playwright storage state (`STORAGE=`), so pages
+  behind a login are measured as a signed-in user sees them.
+- `audit:consumers` checks a consumer still in review on its branch and
+  reports it as pending, outside coverage, until it reaches its default
+  branch. Watchman is the first: a dashboard, light and dark.
 - `audit:install` fails when a consumer's root font size is not the reader's
   default, which rescales every rem in the theme. (#2, 26 Sep)
 - docs/1.0.md: what 1.0 means, as gates with runners.
