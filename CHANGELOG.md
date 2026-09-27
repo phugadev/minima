@@ -1,11 +1,20 @@
 # Changelog
 
-Minima has no version yet. Everything lands here under `[Unreleased]` until
-the gates in [docs/1.0.md](docs/1.0.md) hold, and the first number anyone sees
-is the one those gates earn. After 1.0 this follows semantic versioning as
-that document defines it: roles and names are the API, values are not.
+Minima follows semantic versioning as [docs/1.0.md](docs/1.0.md) defines it:
+roles and names are the API, values are not. A renamed or removed name is a
+major release; an addition, or a value retuned with every audit still
+passing, is a minor; a fix no consumer can see is a patch. Work lands under
+`[Unreleased]` until it is released.
 
 ## [Unreleased]
+
+## [1.0.0] — 2026-09-27
+
+The first version. Nothing before it had a number: it was cut when every gate
+in docs/1.0.md held at one commit, proven by runners rather than judged. Two
+consumers of two kinds — enrictrillo.com, a dark reading site, and Watchman, a
+light-and-dark dashboard — install every item from the registry, import all
+nine, and are byte-current with it.
 
 ### Added
 
