@@ -43,8 +43,15 @@ export const L_DARK = [
   0.155, 0.195, 0.245, 0.280, 0.315, 0.360, 0.420, 0.620, 0.780, 0.925,
 ]
 
+/* Step 9 — muted text in light — is 0.44, not the 0.52 it was generated at.
+   At 0.52 muted sat ~5.2:1, so near the 4.5:1 floor that the third text level
+   solved between them (solveSubtle) came out ~0.017 L away: the same grey. The
+   second consumer to ship light, Watchman, showed it — its tertiary and
+   secondary text read as one level. 0.44 is ~7.3:1: two contrast points under
+   the 9.45:1 reading grey, so the order foreground > reading > muted > subtle
+   holds, with room for subtle ~0.057 L below muted — close to dark's 0.072. */
 export const L_GRAY_LIGHT = [
-  0.993, 0.980, 0.956, 0.938, 0.918, 0.892, 0.858, 0.640, 0.520, 0.180,
+  0.993, 0.980, 0.956, 0.938, 0.918, 0.892, 0.858, 0.640, 0.440, 0.180,
 ]
 /* A reading gray, and the ramp has no room for it: the light track jumps 0.340
    in lightness between step 9 and step 10 while every other gap is about 0.03.
@@ -288,11 +295,9 @@ export const TEXT_FLOOR = 4.5
    two flattened the page. In dark that gap is wide (muted is ~9:1) and the
    level lands well clear of both neighbours.
 
-   In light it is not, and this should be read before reaching for it there.
-   Muted is already ~5.2:1, so the midpoint sits ~0.015 L below it — the same
-   colour to the eye. The token is legal in light, not distinct. Making it
-   distinct would mean darkening muted, which moves every muted label in every
-   consumer for the sake of one that has not asked in light. */
+   In light it once was not: muted sat ~5.2:1 and the midpoint landed ~0.017 L
+   below it, the same grey. Light muted was darkened to make room (see
+   L_GRAY_LIGHT) once a light-mode consumer showed the two reading as one. */
 export function solveSubtle(mode, grayTrack) {
   const grounds = TEXT_GROUNDS[mode].map((s) => relLuminance(grayTrack[s - 1], 0, 0))
   const worst = (L) => Math.min(...grounds.map((g) => contrast(relLuminance(L, 0, 0), g)))

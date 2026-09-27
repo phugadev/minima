@@ -39,6 +39,12 @@ that document defines it: roles and names are the API, values are not.
 
 ### Changed
 
+- Light `muted-foreground` is darker: gray step 9 in light moves from 0.52
+  (~5.2:1) to 0.44 (~7.3:1). At 0.52 the solved `subtle-foreground` came out
+  the same grey as muted, and Watchman's light mode showed it. Both now read
+  as distinct levels in both modes. Every muted label in light mode is a
+  little darker; every audit still passes.
+
 - The README shows the theme on a real page, stock and Minima side by side,
   in both modes. (10 Sep)
 - The shadcn radius scale is anchored to Minima's rungs rather than
