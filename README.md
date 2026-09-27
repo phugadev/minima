@@ -173,8 +173,9 @@ npm run audit:consumers   # every installed item current and imported, per consu
 ```
 
 It prints which items, modes and kinds of project real consumers have proven.
-Those are the gates in [docs/1.0.md](docs/1.0.md), which is what 1.0 means here
-— until they hold there is no version, and changes accumulate in
+Those are the gates in [docs/1.0.md](docs/1.0.md), which is what 1.0 means here.
+They all held at one commit on 27 September 2026, and that commit is `v1.0.0`;
+what changes after it, and which number each change moves, is in
 [CHANGELOG.md](CHANGELOG.md).
 
 Each of those exists because something broke. The registry check exists because
