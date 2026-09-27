@@ -54,7 +54,7 @@
   /* The one name here that is not shadcn's. A third text level, one step
      quieter than muted, added when a real consumer flattened without it —
      solved, not chosen, in scripts/generate-scales.mjs (solveSubtle). Distinct
-     from muted in dark; in light it is legal but the same colour to the eye. */
+     from muted in both modes. */
   --subtle-foreground: var(--gray-text-subtle);
   /* Hover is a veil, not a swap: the row underneath might be striped,
      selected, or an image. --muted and --secondary stay opaque because they

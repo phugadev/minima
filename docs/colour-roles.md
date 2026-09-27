@@ -185,15 +185,17 @@ It is solved, not picked — halfway in contrast ratio between muted and the
 4.5:1 text floor, on the worst ground text can sit on:
 
 ```
-          muted          subtle         floor
-dark      0.77  ~9:1     0.698          4.5:1 at 0.588
-light     0.52  ~5.2:1   0.537          4.5:1 at 0.554
+          muted          subtle          floor
+dark      0.77  ~9:1     0.698  ~6.4:1   4.5:1 at 0.588
+light     0.44  ~7.3:1   0.497  ~5.7:1   4.5:1 at 0.554
 ```
 
-In dark that lands clear of both neighbours. In light it does not, because
-muted already sits near the floor, and the two are the same colour to the eye.
-That is reported here rather than hidden: `subtle` is legal in light, not
-distinct. Making it distinct would mean darkening muted for every consumer.
+It lands clear of both neighbours in both modes — but in light that took a
+decision. Light muted was generated at 0.52 (~5.2:1), so close to the floor
+that the midpoint came out 0.017 L away: the same grey, which Watchman, the
+first consumer to ship light, showed plainly. Light muted was darkened to 0.44,
+two contrast points under the reading grey, so the four light text levels keep
+their order and subtle has room: 0.057 L below muted, against 0.072 in dark.
 
 `audit-ramps` holds it to the text floor on every ground text can meet —
 including dark's raised rungs, where a quiet colour runs out first — and fails
