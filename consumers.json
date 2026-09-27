@@ -40,7 +40,6 @@
         "light",
         "dark"
       ],
-      "branch": "adopt-minima",
       "items": {
         "theme": [
           "styles/minima.css"
