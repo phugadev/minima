@@ -10,12 +10,21 @@
  * It cannot judge whether the entry is any good. It can make forgetting one
  * impossible to merge unnoticed, which is the failure that actually happens.
  *
+ * And one more thing, because of how Minima reaches people: the registry
+ * serves the default branch, so whatever is on `main` is what every consumer
+ * installs. The version promise in docs/1.0.md only holds if `main` is always
+ * a release. So on `main` — or anywhere with --release — the changelog's
+ * [Unreleased] section must be empty and package.json must carry the newest
+ * released version. Work in progress lives on branches, where this half is
+ * reported, not failed.
+ *
  * Registry only: it reads this repository's own history.
  *
- *   node scripts/audit-changelog.mjs
+ *   node scripts/audit-changelog.mjs             (release check on main only)
+ *   node scripts/audit-changelog.mjs --release   (release check here too)
  */
 import { execFileSync } from "node:child_process"
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 
 const root = new URL("../", import.meta.url)
 const git = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim()
@@ -41,6 +50,24 @@ for (const sha of commits) {
   }
 }
 
+/* ── main is a release ─────────────────────────────────────────────────── */
+const branch = git("rev-parse", "--abbrev-ref", "HEAD")
+const enforce = branch === "main" || process.argv.includes("--release")
+const changelog = readFileSync(new URL("CHANGELOG.md", root), "utf8")
+const unreleased = (changelog.split(/^## \[Unreleased\]\s*$/m)[1] ?? "").split(/^## \[/m)[0].trim()
+const newest = changelog.match(/^## \[(\d+\.\d+\.\d+)\]/m)?.[1]
+const version = JSON.parse(readFileSync(new URL("package.json", root), "utf8")).version
+const release = []
+if (unreleased) release.push("[Unreleased] has entries — on main every change is released; move them under a version")
+if (newest !== version) release.push(`package.json is ${version}, the newest release in CHANGELOG.md is ${newest}`)
+if (enforce) {
+  for (const r of release) failures.push(`release  ${r}`)
+} else if (release.length) {
+  console.log(`on ${branch}, not yet a release (checked on main, or with --release):`)
+  for (const r of release) console.log(`  - ${r}`)
+  console.log("")
+}
+
 console.log(
   introduced
     ? `${commits.length} commit(s) since CHANGELOG.md began (${introduced.slice(0, 7)})`
@@ -53,4 +80,4 @@ if (failures.length) {
   console.log("")
   process.exit(1)
 }
-console.log("PASS — every change that ships came with a changelog entry\n")
+console.log(`PASS — every change that ships came with a changelog entry${enforce ? `, and ${branch === "main" ? "main" : "this branch"} is release ${version}` : ""}\n`)

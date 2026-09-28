@@ -278,6 +278,46 @@ at `:root:root` to beat shadcn's defaults. Match that specificity:
 Or edit `styles/minima.css` directly. It is in your repo and it is yours — but
 it is generated, so a reinstall will overwrite it.
 
+## Colour, by role
+
+Every hue comes in the same roles. Pick by what the colour is doing, never by
+which step looks right on the screen you happen to be looking at — the steps
+are tuned per mode, and one that looks right in dark can be the wrong one in
+light.
+
+| You are colouring | Use | Why |
+|---|---|---|
+| Words | `text-{hue}-text` | the step that stays legible as text in both modes |
+| A dot or shape **beside its label** | `bg-{hue}-solid` | keeps the hue in both modes; the label carries the meaning, so the dot owes no contrast floor of its own |
+| A shape **standing alone** — no label | `bg-{hue}-mark` | darkens in light to hold 3:1 by itself; next to a label that makes it read muddy |
+| A tinted panel with words on it | `bg-{hue}-fill border-{hue}-border text-{hue}-text` | text goes on a fill, never on a tint |
+
+The one people get wrong is the second row: reaching for `mark` for every dot.
+It was built for a mark with nothing beside it to explain it. The reasoning
+for all four is in [colour-roles.md](colour-roles.md).
+
+## Check your own pages
+
+Minima's audits prove every pairing Minima itself makes. They cannot see the
+ones you make — a quiet grey you compose from a ramp step, a label on a chip
+of your own, text on a colour you mixed. Those are only visible on the page,
+and they are mode-sensitive: a grey step that reads 4.7:1 on a dark page can
+read 3.2:1 on a light one. A consumer built exactly that, dark-first, and it
+was only caught by measuring the light pages.
+
+So measure the pages, in both modes, at a desktop and a phone width:
+
+```bash
+URL=http://localhost:3000 PAGES=/,/blog,/about npm run audit:pages
+```
+
+It checks every piece of text against the colour actually painted behind it,
+translucent layers included, and fails anything under 4.5:1 (3:1 for large
+text); it also fails a page that scrolls sideways on a phone, and a root font
+size that is not the reader's. Both modes are the default; for pages behind a
+login, pass a saved session with `STORAGE=./session.json`. Run it from a
+checkout of this repository — it is a runner, not something you install.
+
 ## When it looks like nothing happened
 
 **Everything renders in Times.** shadcn's `@theme` maps `--font-sans` to itself
