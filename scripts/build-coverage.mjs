@@ -133,6 +133,11 @@ const fixtures = [
   '        </p>',
   '      </article>',
   '      <div data-orientation="horizontal" data-variant-bridge className="data-horizontal:flex-col">x</div>',
+  /* Shiki's two output shapes, as it writes them: an inline light colour with
+     --shiki-dark beside it (its default), and the two properties alone
+     (defaultColor: false). syntax.css has to resolve both, in both modes. */
+  '      <span data-shiki-probe="inline-light" style={{ color: "#111111", "--shiki-dark": "#eeeeee" } as never}>x</span>',
+  '      <span data-shiki-probe="vars-only" style={{ "--shiki-light": "#111111", "--shiki-dark": "#eeeeee" } as never}>x</span>',
   /* Every element that takes focus without help. state.css claims a ring on
      the first eight and deliberately leaves the last three to the browser;
      audit-install focuses each one and holds the claim to the DOM rather than

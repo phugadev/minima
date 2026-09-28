@@ -210,6 +210,22 @@ import light from "@/styles/minima-syntax-light.json"
 import dark from "@/styles/minima-syntax-dark.json"
 ```
 
+Give Shiki **both** themes and the colours follow the page — light by default,
+dark wherever `.dark` is on the root — with nothing else to write:
+
+```ts
+// Shiki
+codeToHtml(code, { lang, themes: { light, dark } })
+
+// rehype-pretty-code
+[rehypePrettyCode, { theme: { light, dark }, keepBackground: false }]
+```
+
+Shiki writes each token's colour for both modes as `--shiki-light` and
+`--shiki-dark`; the theme picks the one for the current mode. Passing a single
+theme is what puts the dark palette on a light page — pale tokens on white — so
+give it both even if your site is dark-only today.
+
 ## Using prose
 
 Prose is a mode you opt into, so a `<code>` in a table cell is not given

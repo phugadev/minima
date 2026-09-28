@@ -8,6 +8,25 @@ passing, is a minor; a fix no consumer can see is a patch. Work lands under
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-09-28
+
+### Added
+
+- Shiki follows the page's mode. Given both Minima syntax themes, Shiki
+  writes each token's colour as `--shiki-light` and `--shiki-dark`; the theme
+  now picks the one for the current mode, off `.dark` like everything else.
+  It covers both of Shiki's output shapes — its default (an inline light
+  colour with `--shiki-dark` beside it) and `defaultColor: false` (the two
+  properties alone, which rehype-pretty-code uses) — and the block
+  backgrounds. Keyed on the properties Shiki writes, so it touches nothing
+  else. Before this every consumer had to write the switch, and one built
+  the dark palette on a light page.
+- audit-install renders both shapes in both modes and fails the one that
+  lands on the wrong mode. Against the 1.0.1 theme it fails three of the
+  four; against this one, none.
+- docs/install.md shows the two-theme configuration for Shiki and for
+  rehype-pretty-code.
+
 ## [1.0.1] — 2026-09-28
 
 Documentation and process. No token, utility, component or value changes;
