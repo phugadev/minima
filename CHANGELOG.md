@@ -8,6 +8,22 @@ passing, is a minor; a fix no consumer can see is a patch. Work lands under
 
 ## [Unreleased]
 
+## [1.3.0] — 2026-09-28
+
+### Added
+
+- `layout`: a quiet voice. `Section` and `PageHeader` take
+  `variant="quiet"` — the label, title and lead all at body size, hierarchy
+  carried by colour and space instead of an uppercase label, a rule and a
+  display title. The default voice is unchanged. Written because the first
+  consumer's redesign dropped the default voice for one it hand-rolled from
+  `Container` and a local label component; that site now builds every page
+  from the quiet voice, and a text-keyed snapshot of its pages in both modes
+  at desktop and phone widths shows no glyph moved.
+- `layout`: `containerVariants` gains `size="narrow"`, one column of reading,
+  beside `page`. `Section` and `PageHeader` take `size` and pass it to their
+  container.
+
 ## [1.2.0] — 2026-09-28
 
 ### Added

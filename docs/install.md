@@ -178,6 +178,24 @@ a page built from them follows `data-density` with no further work:
 sit one rung apart, not two. `containerVariants()` gives the page column to
 any element that is not a `Container`.
 
+`Section` and `PageHeader` speak in one of two voices. The default is the one
+above — a small uppercase label over a rule, a display-size title and a lead.
+`variant="quiet"` drops all of it to the reading size: the section label is a
+line of body text in the subtle colour, the title is body text in the
+foreground, the lead is a paragraph. It is for a page whose hierarchy is carried
+by space and colour rather than size — a personal site, a long read — where the
+default voice reads as a product page:
+
+```tsx
+<PageHeader variant="quiet" size="narrow" title="Writing" lead="Notes, newest first." />
+<Section variant="quiet" size="narrow" label="Work">…</Section>
+```
+
+The voice changes only type and colour. Spacing stays on the ladder, so both
+voices follow `data-density` and can share a page. `size` picks the column on
+all three: `page` (the default, wide enough for a grid of panels) or `narrow`
+(one column of reading).
+
 Each declares `phugadev/minima/theme` and `phugadev/minima/cn` as dependencies,
 so adding a component first pulls both in for you.
 
