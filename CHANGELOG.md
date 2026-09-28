@@ -8,6 +8,28 @@ passing, is a minor; a fix no consumer can see is a patch. Work lands under
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-09-28
+
+Documentation and process. No token, utility, component or value changes;
+nothing a consumer installs is different.
+
+### Added
+
+- docs/1.0.md, "How a release reaches consumers": the registry serves `main`,
+  so every merge to `main` is a release — entries move under a version, the
+  version is set in package.json, the merge commit is tagged.
+- `audit-changelog` enforces it: on `main` (or with `--release`), an entry
+  under `[Unreleased]` or a package.json version that is not the newest
+  release fails the audit. On other branches it reports without failing.
+- docs/install.md, "Colour, by role": words take `-text`, a dot beside its
+  label takes `-solid`, a shape standing alone takes `-mark`, a tinted panel
+  takes `-fill`, `-border` and `-text`. `mark` for every dot was a real
+  mistake in a consumer — it darkens in light to stand alone, and read muddy
+  beside a label.
+- docs/install.md, "Check your own pages": Minima's audits cover its own
+  pairings, not a consumer's; run `audit:pages` in both modes, because a
+  ramp step composed in dark can fail in light — as one consumer's did.
+
 ## [1.0.0] — 2026-09-27
 
 The first version. Nothing before it had a number: it was cut when every gate
