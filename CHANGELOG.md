@@ -8,6 +8,24 @@ passing, is a minor; a fix no consumer can see is a patch. Work lands under
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-09-28
+
+### Added
+
+- `palette` registry item: `styles/minima-palette.json`, every colour the
+  theme defines — 338 per mode: ramps, roles, the shadcn names, syntax,
+  focus — resolved to hex for light and dark, keyed by token name.
+  Translucent tokens keep their alpha as 8-digit hex. For the places a CSS
+  variable cannot go: emails, Open Graph images, SVG attributes, charts.
+  Before this, consumers re-parsed minima.css with regexes of their own —
+  three separate resolvers across two projects.
+- scripts/build-palette.mjs generates it from the built theme as part of
+  `npm run build`.
+- audit-palette fails when the committed palette is not what the committed
+  theme resolves to (shown by editing one grey without rebuilding: six
+  tokens flagged), when the modes carry different tokens, or when a
+  translucent token loses its alpha.
+
 ## [1.1.0] — 2026-09-28
 
 ### Added

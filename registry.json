@@ -38,6 +38,19 @@
       ]
     },
     {
+      "name": "palette",
+      "type": "registry:file",
+      "title": "Palette",
+      "description": "Every Minima colour resolved to hex, for both modes \u2014 for emails, Open Graph images, SVG attributes, charts and anywhere else that cannot read a CSS variable.",
+      "files": [
+        {
+          "path": "registry/minima-palette.json",
+          "type": "registry:file",
+          "target": "~/styles/minima-palette.json"
+        }
+      ]
+    },
+    {
       "name": "cn",
       "type": "registry:lib",
       "title": "cn",
