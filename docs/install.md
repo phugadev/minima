@@ -226,6 +226,33 @@ Shiki writes each token's colour for both modes as `--shiki-light` and
 theme is what puts the dark palette on a light page — pale tokens on white — so
 give it both even if your site is dark-only today.
 
+## Optional — the palette, as hex
+
+Some places cannot read a CSS variable: an email (clients strip them), an Open
+Graph image (satori renders outside a browser), an SVG `fill` attribute, a
+chart library that wants a string. For those, take the palette:
+
+```bash
+npx shadcn@latest add phugadev/minima/palette
+```
+
+It lands at `styles/minima-palette.json`: every colour the theme defines —
+ramps, roles, the shadcn names, syntax, focus — resolved to hex for both modes,
+keyed by token name without the `--`:
+
+```ts
+import palette from "@/styles/minima-palette.json"
+
+palette.light["foreground"]      // "#121212"
+palette.dark["amber-solid"]      // "#e68d00"
+palette.light["border"]          // "#01010124" — translucent tokens keep their alpha
+```
+
+It is generated from the same build as the theme and checked against it, so
+it cannot drift. Re-add it whenever you re-add the theme. Reach for it only
+where a variable cannot go — in the DOM, the CSS variable is still the right
+answer, because it follows the mode and this does not.
+
 ## Using prose
 
 Prose is a mode you opt into, so a `<code>` in a table cell is not given
