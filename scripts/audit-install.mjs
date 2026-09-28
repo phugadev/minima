@@ -275,6 +275,23 @@ for (const mode of ["light", "dark"]) {
       'data-horizontal: does not resolve to [data-orientation="horizontal"] — this project is missing `@import "shadcn/tailwind.css"`, and the tabs list will lay out sideways with no underline on the line variant'
     )
 
+  /* Shiki follows the mode. Both output shapes carry a light #111111 and a
+     dark #eeeeee; each has to render the one for the mode it is in. Without
+     the switch in syntax.css the inline shape stays light in dark, and the
+     vars-only shape renders in the inherited colour in both. */
+  const want = mode === "dark" ? "rgb(238, 238, 238)" : "rgb(17, 17, 17)"
+  const shiki = await page.evaluate(() =>
+    [...document.querySelectorAll("[data-shiki-probe]")].map((el) => [el.getAttribute("data-shiki-probe"), getComputedStyle(el).color])
+  )
+  checked += 1 + shiki.length
+  if (shiki.length !== 2) fail(mode, "shiki", `expected 2 probes on the coverage page, found ${shiki.length} — regenerate it`)
+  const wrongShiki = shiki.filter(([, c]) => c !== want)
+  console.log(
+    `  ${"shiki follows mode".padEnd(22)} ${String(shiki.length).padStart(3)}   ${wrongShiki.length ? `${wrongShiki.length} on the wrong mode` : `both shapes ${mode}`}`
+  )
+  for (const [shape, c] of wrongShiki)
+    fail(mode, `shiki ${shape}`, `renders ${c}, the ${mode} token colour is ${want} — the mode switch in syntax.css is not reaching it`)
+
   const line = (label, list) =>
     `  ${label.padEnd(22)} ${String(list.length).padStart(3)}${list.length ? "   " + list.slice(0, 3).map((r) => r.cls).join(", ") : ""}`
   if (notDeclared.length) console.log(line("token undefined", notDeclared))
