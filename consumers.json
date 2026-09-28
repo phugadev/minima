@@ -28,6 +28,9 @@
         ],
         "layout": [
           "components/ui/layout.tsx"
+        ],
+        "palette": [
+          "styles/minima-palette.json"
         ]
       }
     },
@@ -61,6 +64,9 @@
         ],
         "status": [
           "src/components/ui/status.tsx"
+        ],
+        "palette": [
+          "styles/minima-palette.json"
         ]
       }
     }
