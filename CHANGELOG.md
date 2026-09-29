@@ -8,6 +8,35 @@ passing, is a minor; a fix no consumer can see is a patch. Work lands under
 
 ## [Unreleased]
 
+## [1.4.0] — 2026-09-29
+
+### Changed
+
+- `theme`: dark `--gray-reading` is `oklch(0.821 0 0)`, was `0.88`. Body
+  prose in dark sat only 40% of the way from the foreground down to muted —
+  about 13:1 under 16.6:1 headings, measured on the canvas — so a dark page
+  read as one brightness; light's 0.38 sits 71% of the way down. Dark is now
+  solved to light's position (`solveReading` in scripts/generate-scales.mjs)
+  rather than picked. Light is unchanged. Found by the first consumer, whose
+  dark posts had to override prose to muted to get headings back. Dark code
+  names use the same step, so `syntax-dark.json`'s foreground moves with it,
+  `#d7d7d7` to `#c4c4c4`.
+
+### Added
+
+- `theme`: Shiki's italic and bold. The themes mark comments italic and
+  keywords bold, and Shiki's default output writes that inline, but with
+  `defaultColor: false` (rehype-pretty-code's) it writes only
+  `--shiki-light-font-style` / `-font-weight`, which nothing read — every
+  comment and keyword rendered plain. Now applied in both shapes, with bold at
+  600 to match the Prism and highlight.js bindings rather than Shiki's 700.
+  Scoped to elements carrying a Shiki property.
+- audit-ramps checks the reading step sits strictly between foreground and
+  muted in each mode, and at the same place in both (within 0.02). Against
+  the 1.3.0 value it fails: dark at 0.40 against light's 0.71.
+- audit-syntax checks the light and dark themes style the same scopes the
+  same way, which the one-rule Shiki binding depends on.
+
 ## [1.3.0] — 2026-09-28
 
 ### Added

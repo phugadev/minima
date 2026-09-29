@@ -212,4 +212,25 @@
   .dark [style*="--shiki-dark-bg:"] {
     background-color: var(--shiki-dark-bg, transparent) !important;
   }
+
+  /* Italic comments and bold keywords, as the themes mark them — the same
+     tokens the Prism and highlight.js bindings above set italic and 600.
+     Shiki's default shape writes them inline, so they already applied;
+     defaultColor: false (rehype-pretty-code's) writes them only as
+     --shiki-light-font-style / -font-weight, which nothing read, so every
+     comment and keyword rendered plain. A consumer had to patch it.
+
+     Matched on the value, which reads the same in either shape. Bold lands
+     at 600 like the class-based bindings rather than the 700 Shiki's inline
+     `bold` means, so a keyword weighs the same whichever highlighter drew
+     it; !important is what beats the inline weight. Both themes mark the
+     same scopes (audit-syntax), so one rule serves both modes. Scoped to
+     elements carrying a Shiki property, so an inline bold anywhere else in
+     an app is left alone. */
+  [style*="--shiki-"][style*="font-style:italic"] {
+    font-style: italic;
+  }
+  [style*="--shiki-"][style*="font-weight:bold"] {
+    font-weight: 600 !important;
+  }
 }
