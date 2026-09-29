@@ -33,6 +33,7 @@ import {
   TEXT_GROUNDS,
   TEXT_FLOOR,
   solveSubtle,
+  solveReading,
 } from "./generate-scales.mjs"
 
 const arg = (name, fallback) => {
@@ -187,6 +188,28 @@ function run(chromaScale, { quiet = false } = {}) {
         })
       }
     }
+  }
+
+  /* Body prose owes the page a hierarchy, and a floor cannot see one: prose
+     at 13:1 under 16.6:1 headings clears every floor and still reads as one
+     brightness. So the reading step has to sit strictly between foreground
+     and muted in each mode, and at the same place between them in both —
+     measured on the canvas, in log contrast. Dark was once 0.31 off light. */
+  const position = {}
+  for (const mode of ["light", "dark"]) {
+    const track = mode === "light" ? L_GRAY_LIGHT : L_GRAY_DARK
+    const canvas = relLuminance(track[mode === "light" ? 1 : 0], 0, 0)
+    const c = (L) => Math.log(contrast(relLuminance(L, 0, 0), canvas))
+    const [fg, reading, muted] = [c(track[9]), c(solveReading(mode)), c(track[8])]
+    total++
+    if (!(fg > reading && reading > muted)) {
+      failures.push({ mode, label: "gray-reading not between fg and muted", floor: "fg > reading > muted", ratio: +Math.exp(reading).toFixed(2) })
+    }
+    position[mode] = (fg - reading) / (fg - muted)
+  }
+  total++
+  if (Math.abs(position.light - position.dark) > 0.02) {
+    failures.push({ mode: "dark", label: "gray-reading position vs light", floor: +position.light.toFixed(2), ratio: +position.dark.toFixed(2) })
   }
 
   if (!quiet) {

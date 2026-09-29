@@ -331,7 +331,7 @@
   --gray-on-solid: oklch(0.18 0 0);
   --gray-mark: oklch(0.6 0 0);
   --gray-on-mark: oklch(0.18 0 0);
-  --gray-reading: oklch(0.88 0 0);
+  --gray-reading: oklch(0.821 0 0);
   --gray-text-subtle: oklch(0.698 0 0);
   --gray-tint-subtle: rgb(252 252 252 / 7.4%);
   --gray-tint: rgb(254 254 254 / 10.9%);

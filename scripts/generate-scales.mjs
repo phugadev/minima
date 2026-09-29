@@ -65,9 +65,9 @@ export const L_GRAY_LIGHT = [
    to live and is easier to read for more than a paragraph.
 
    0.380 lands on #424242 in light, which is where sites that do this well tend
-   to end up. Dark takes 0.880 rather than 0.960 for the mirror reason: pure
-   white on near-black halates. */
-export const L_GRAY_READING = { light: 0.38, dark: 0.88 }
+   to end up. Dark's step is not chosen: solveReading derives it from light's
+   (below), so the lift is the same size in both modes. */
+export const L_GRAY_READING_LIGHT = 0.38
 
 export const L_GRAY_DARK = [
   0.145, 0.185, 0.225, 0.255, 0.285, 0.325, 0.375, 0.600, 0.770, 0.960,
@@ -313,6 +313,39 @@ export function solveSubtle(mode, grayTrack) {
   return hi
 }
 
+/* Where body prose sits between the headings and muted text: solved so it
+   sits in the same place in both modes.
+
+   Dark used to be picked by hand at 0.880 — "pure white on near-black
+   halates". It does, but 0.880 only lifted the body 40% of the way from
+   foreground to muted, measured on the canvas in log contrast (the scale
+   contrast is perceived on), where light's 0.380 lifts it 71%. So dark
+   prose sat ~13:1 against ~16.6:1 headings and read as one brightness —
+   enrictrillo.com, reading in dark, had to override prose to muted to get
+   its hierarchy back.
+
+   Light stays the anchor, because 0.380 was chosen by eye against real
+   pages. Dark takes the lightness that puts it at light's position, which
+   also keeps it clear of pure white. */
+export function solveReading(mode) {
+  /* The canvas is gray-2 in light and gray-1 in dark (semantic.css). */
+  const position = (track, L, canvasStep) => {
+    const canvas = relLuminance(track[canvasStep - 1], 0, 0)
+    const c = (x) => Math.log(contrast(relLuminance(x, 0, 0), canvas))
+    return (c(track[9]) - c(L)) / (c(track[9]) - c(track[8]))
+  }
+  const target = position(L_GRAY_LIGHT, L_GRAY_READING_LIGHT, 2)
+  if (mode === "light") return L_GRAY_READING_LIGHT
+  /* Bisect between muted and foreground: position falls as L rises. */
+  let [lo, hi] = [L_GRAY_DARK[8], L_GRAY_DARK[9]]
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2
+    if (position(L_GRAY_DARK, mid, 1) > target) lo = mid
+    else hi = mid
+  }
+  return lo
+}
+
 /** Every ramp value for one mode, as a flat `{ "gray-1": "oklch(…)" }` map. */
 export function rampVars(mode) {
   const light = mode === "light"
@@ -336,7 +369,7 @@ export function rampVars(mode) {
      nothing currently makes. Above the floor and honest about it. */
   const grayish = { name: "gray", hue: 0, cMax: 0, lPeak: 0.5, lBias: 0 }
   const cTrack = light ? C_LIGHT : C_DARK
-  vars["gray-reading"] = `oklch(${r3(L_GRAY_READING[mode])} 0 0)`
+  vars["gray-reading"] = `oklch(${r3(solveReading(mode))} 0 0)`
   vars["gray-text-subtle"] = `oklch(${r3(solveSubtle(mode, grayTrack))} 0 0)`
   vars["gray-on-solid"] = pickOnSolid(grayish, grayTrack, cTrack, biasScale).css
   vars["gray-mark"] = vars[`gray-${MARK_STEP(mode)}`]

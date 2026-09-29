@@ -18,7 +18,7 @@
  */
 import { readFileSync } from "node:fs"
 import { srgb, composite, luminanceOf, contrast, HUES } from "./generate-scales.mjs"
-import { readCss } from "./sources.mjs"
+import { readCss, syntaxThemeUrl } from "./sources.mjs"
 
 const read = (f) => readCss(f.replace(/\.css$/, ""))
 const FILES = ["ramps.css", "semantic.css", "depth.css", "syntax.css"]
@@ -132,6 +132,34 @@ const closest = pairs.length ? pairs.reduce((a, b) => (a.gap < b.gap ? a : b)) :
 checked++
 if (!closest) fail("separation", "no chromatic roles found — the check would pass by doing nothing")
 else console.log(`\n${chromatic.length} chromatic roles, closest pair: ${closest.a} / ${closest.b} at ${closest.gap} degrees`)
+
+/* ── Font style, the same in both modes ──────────────────────────────────
+   The Shiki bindings in syntax.css apply italic and bold with one rule for
+   both modes, keyed on the value rather than on the mode's property. That is
+   only right while the light and dark themes mark the same scopes the same
+   way; a scope italic in one and upright in the other would take the light
+   theme's style in dark. */
+const styled = (mode) => {
+  const theme = JSON.parse(readFileSync(syntaxThemeUrl(mode), "utf8"))
+  const out = new Map()
+  for (const rule of theme.tokenColors ?? []) {
+    const style = rule.settings?.fontStyle
+    if (!style) continue
+    for (const scope of [].concat(rule.scope)) out.set(scope, style)
+  }
+  return out
+}
+{
+  const [light, dark] = [styled("light"), styled("dark")]
+  checked++
+  const scopes = new Set([...light.keys(), ...dark.keys()])
+  const differ = [...scopes].filter((s) => light.get(s) !== dark.get(s))
+  if (differ.length)
+    fail("font-style", `light and dark style ${differ.length} scope(s) differently: ${differ.slice(0, 4).join(", ")}`)
+  checked++
+  if (!scopes.size) fail("font-style", "no styled scopes found — the check would pass by doing nothing")
+  else console.log(`${scopes.size} styled scopes, identical in both themes`)
+}
 
 console.log(`\n${checked} checks — ${failures.length} failing`)
 if (failures.length) {
